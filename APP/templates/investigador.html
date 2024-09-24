@@ -1,0 +1,17 @@
+{% extends 'base.html' %} {% block content %}
+
+<main class="container">
+
+  <div class = "row">
+    <div class = "col-md-6 col-md-offset-3">
+      <h1><strong>{{investigador.nombre}} {{investigador.apellidos}}</strong></h1>
+      <p>{{investigador.user.username}}</p>
+      <p>Enlaces de Interés {{investigador.link}}</p>
+      <p>Grupos: {{investigador.grupos}}</p>
+      <p>Proyectos: {{investigador.proyectos}}</p>
+    </div>
+
+</main>
+
+
+{% endblock %}

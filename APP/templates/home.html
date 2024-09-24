@@ -1,0 +1,81 @@
+{% extends 'base.html' %} {% block content %}
+
+<div class="container">
+    <div class="row">
+
+    <!-- Mostrar los proyectos aleatorios como cartas con enlace y que se dezplacen automaticamente con máximo de 5  -->
+    <div class="col-md-12">
+        <h1>Proyectos</h1>
+        <div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
+            <div class="carousel-inner">
+                {% for proyecto in proyectos %}
+                <div class="carousel-item {% if forloop.first %} active {% endif %}">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title
+                            "><a href="{% url 'proyectos' proyecto.id %}">{{proyecto.nombre}}</a></h5>
+                            <p class="card-text">Investigadores: {{proyecto.investigadores}}</p>
+                            <p class="card-text">Grupos: {{proyecto.grupos}}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Mostrar los grupos aleatorios como cartas con enlace y que se dezplacen automaticamente con máximo de 5  -->
+    <div class="col-md-12">
+        <h1>Grupos</h1>
+        <div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
+            <div class="carousel-inner">
+                {% for grupo in grupos %}
+                <div class="carousel-item {% if forloop.first %} active {% endif %}">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title
+                            "><a href="{% url 'grupos' grupo.id %}">{{grupo.nombre}}</a></h5>
+                            <p class="card-text">Investigadores: {{grupo.investigadores}}</p>
+                            <p class="card-text">Proyectos: {{grupo.proyectos}}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Mostrar los investigadores aleatorios como cartas con enlace y que se dezplacen automaticamente con máximo de 5  -->
+    <div class="col-md-12">
+        <h1>Investigadores</h1>
+        <div id="carouselExampleControls" class="carousel slide" data-ride="carousel">
+            <div class="carousel-inner">
+                {% for investigador in investigadores %}
+                <div class="carousel-item {% if forloop.first %} active {% endif %}">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title
+                            "><a href="{% url 'investigadores' investigador.id %}">{{investigador.nombre}} {{investigador.apellidos}}</a></h5>
+                            <p class="card-text">{{investigador.email}}</p>
+                            <p class="card-text">Grupos: {{investigador.grupos}}</p>
+                            <p class="card-text">Proyectos: {{investigador.proyectos}}</p>
+
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+
+
+        
+
+
+
+
+    </div>
+</div>
+
+{% endblock %}

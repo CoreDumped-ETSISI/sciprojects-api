@@ -1,0 +1,65 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+            
+      <a class="navbar-brand" href="/">
+        <img
+          src="https://www.upm.es/gsfs/SFS11416"
+            alt="76"
+            width="258"
+          class="d-inline-block align-text-top"
+        />
+      </a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#navbarNav"
+        aria-controls="navbarNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+
+            <li class="nav-item">
+                <a href="{% url 'investigadores' %}" class="nav-link">Investigadores</a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'grupos' %}" class="nav-link">Grupos</a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'proyectos' %}" class="nav-link">Proyectos</a>
+
+
+          {% if user.is_authenticated %}
+          <li class="nav-item">
+            <a href="{% url 'modify_profile' %}" class="nav-link"
+              >My Profile</a
+            >
+          </li>
+
+          <li class="nav-item">
+            <a href="{% url 'create_group' %}" class="nav-link">Create Group</a>
+          </li>
+            <li class="nav-item">
+                <a href="{% url 'create_project' %}" class="nav-link">Create Project</a>
+            </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/logout">Logout</a>
+          </li>
+          {% else %}
+          <li class="nav-item">
+            <a href="/signin" class="nav-link">Login</a>
+          </li>
+          <li class="nav-item">
+            <a href="/signup" class="nav-link">Register</a>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>

@@ -1,0 +1,21 @@
+{% extends 'base.html' %} {% block content %}
+
+<h1>Investigadores</h1>
+
+<ul>
+  {% for investigador in investigadores %}
+  <li>
+    <a href="{% url 'investigadores' investigador.id %}">
+
+        <strong>{{investigador.nombre}} {{investigador.apellido}}</strong>
+        <p>{{investigador.user.username}}</p>
+        
+        <p>Grupos: {{investigador.grupos}}</p>
+        <p>Proyectos: {{investigador.proyectos}}</p>
+
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+
+{% endblock %}

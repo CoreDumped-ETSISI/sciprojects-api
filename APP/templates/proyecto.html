@@ -1,0 +1,21 @@
+{% extends 'base.html' %} {% block content %}
+
+<main class="container">
+
+  <div class = "row">
+    <div class = "col-md-6 col-md-offset-3">
+      <h1><strong>{{proyecto.nombre}}</strong></h1>
+        <p>Investigadores: {{proyecto.investigadores}}</p>
+        <p>Grupo: {{proyecto.grupo}}</p>
+
+        <p>Fecha de Inicio: {{proyecto.fecha_inicio}}</p>
+        <p>Fecha de Fin: {{proyecto.fecha_fin}}</p>
+        <p>Descripción: {{proyecto.descripcion}}</p>
+        <p>Enlaces de Interés: {{proyecto.link}}</p>
+        <p>Keywords: {{proyecto.keywords}}</p>
+    </div>
+
+</main>
+
+
+{% endblock %}

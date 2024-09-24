@@ -1,0 +1,39 @@
+{% extends 'base.html' %} {% block content %}
+
+<h1>Grupos</h1>
+
+<ul>
+  {% for grupo in grupos %}
+  <li>
+    <a href="{% url 'grupos' grupo.id %}">
+
+        <strong>{{grupo.nombre}}</strong>
+		<p>{{grupo.descripcion}}</p>
+
+		<p>Investigadores: </p>
+		<ul>
+			{% for investigador in investigadores %}
+			<li>
+				<a href="{% url 'investigadores' investigador.id %}">
+					{{investigador.nombre}} {{investigador.apellido}}
+				</a>
+			</li>
+			{% endfor %}
+		</ul>
+
+		<p>Proyectos: </p>
+		<ul>
+			{% for proyecto in proyectos %}
+			<li>
+				<a href="{% url 'proyectos' proyecto.id %}">
+					{{proyecto.nombre}}
+				</a>
+			</li>
+			{% endfor %}
+		</ul>
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+
+{% endblock %}
