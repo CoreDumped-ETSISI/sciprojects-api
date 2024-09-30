@@ -12,7 +12,7 @@ export function ProyectoCard({ proyecto }) {
     useEffect(() => {
         async function fetchGrupos() {
             const gruposPromises = proyecto.grupos.map(async (id) => {
-                const res = await getGruposById(id);
+                const res = await getGrupoById(id);
                 return res.data;
             });
             const gruposData = await Promise.all(gruposPromises);

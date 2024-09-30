@@ -3,9 +3,6 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.models import User
 from django.db import IntegrityError
-from django.contrib.auth.decorators import login_required
-from .forms import ProyectoForm, GrupoForm, InvestigadorForm, UserCreationForm
-import random
 from django.core.mail import send_mail
 import os
 import pymongo
@@ -15,6 +12,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.decorators import authentication_classes
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
 
 my_client = pymongo.MongoClient("mongodb://localhost:27017/")
 my_db = my_client["WEB_INVESTIGACION"]
@@ -32,13 +31,33 @@ from .serializers import InvestigadorSerializer, GrupoSerializer, ProyectoSerial
 
 from rest_framework.authtoken.models import Token
 
+from rest_framework import viewsets, mixins
 
 from bson import ObjectId
 
-class InvestigadorViewSet(viewsets.ModelViewSet):
-    serializer_class = InvestigadorSerializer
-    queryset = investigadores.find()
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
+from bson import ObjectId
 
+class InvestigadorPagination(PageNumberPagination):
+    page_size = 20  # Tamaño de página por defecto
+    page_size_query_param = 'page_size'  # Permite cambiar el tamaño de página
+    max_page_size = 100  # Tamaño máximo de página
+
+class GrupoPagination(PageNumberPagination):
+    page_size = 20  # Tamaño de página por defecto
+    page_size_query_param = 'page_size'  # Permite cambiar el tamaño de página
+    max_page_size = 100  # Tamaño máximo de página
+
+
+
+class InvestigadorViewSet(mixins.ListModelMixin,
+                          mixins.RetrieveModelMixin,
+                          mixins.UpdateModelMixin,
+                          viewsets.GenericViewSet):
+    serializer_class = InvestigadorSerializer
+    pagination_class = InvestigadorPagination
+    
     def get_permissions(self):
         # Permisos diferentes para métodos GET y otros
         if self.request.method in ['GET']:
@@ -46,57 +65,65 @@ class InvestigadorViewSet(viewsets.ModelViewSet):
         return [IsAuthenticated()]
 
     def list(self, request):
+        # Parámetro de búsqueda
+        search_query = request.query_params.get('search', None)
+        # Parámetro de ordenación
+        ordering = request.query_params.get('ordering', None)
+        
+        # Query inicial
+        query = {}
 
-        all_researchers = list(investigadores.find())
+        # Si hay un parámetro de búsqueda
+        if search_query:
+            query = {
+                "$or": [
+                    {"nombre": {"$regex": search_query, "$options": "i"}},  # Búsqueda por nombre
+                    {"apellido": {"$regex": search_query, "$options": "i"}},  # Búsqueda por apellido
+                    {"email": {"$regex": search_query, "$options": "i"}},  # Búsqueda por email
+                    {"grupos": {"$regex": search_query, "$options": "i"}},  # Búsqueda por grupos
+                    {"proyectos": {"$regex": search_query, "$options": "i"}},  # Búsqueda por proyectos
+                ]
+            }
+        
+        # Obtener investigadores desde la base de datos
+        all_researchers = list(investigadores.find(query))
+        
+        # Ordenar los investigadores
+        if ordering:
+            if ordering.startswith('-'):
+                order_by = ordering[1:]
+                all_researchers = sorted(all_researchers, key=lambda x: x.get(order_by, ''), reverse=True)
+            else:
+                all_researchers = sorted(all_researchers, key=lambda x: x.get(ordering, ''))
+
+        # Añadir el campo "id" y eliminar "_id"
         for researcher in all_researchers:
             researcher["id"] = str(researcher["_id"])
-        del researcher["_id"] 
+            del researcher["_id"]
+
+        # Paginación
+        page = self.paginate_queryset(all_researchers)
+        if page is not None:
+            return self.get_paginated_response(page)
 
         return Response(all_researchers)
     
     def retrieve(self, request, pk=None):
-
         researcher = investigadores.find_one({"_id": ObjectId(pk)})
-
         if researcher:
             researcher["id"] = str(researcher["_id"])
             del researcher["_id"]
-            groups = grupos.find({"investigadores": ObjectId(pk)})
-            researcher["groups"] = list(groups)
-            projects = proyectos.find({"investigadores": ObjectId(pk)})
-            researcher["projects"] = list(projects)
             return Response(researcher)
         return Response({"error": "Investigador no encontrado."}, status=404)
     
-    def create(self, request):
-        # No puede realizar esta acción
-        return Response({"error": "No se puede realizar esta acción."}, status=405)
-    
-
     def update(self, request, pk=None):
-        # Fetch the email of the investigator from the database
-        investigador = investigadores.find_one({"_id": ObjectId(pk)})
+        if request.user.username != investigadores.find_one({"_id": ObjectId(pk)})["email"]:
+            return Response({"error": "No puedes modificar un investigador que no eres tú."}, status=403)
         
-        if not investigador:
-            return Response({"error": "Investigador no encontrado."}, status=404)
-
-        investigador_email = investigador["email"]
-
-        # Allow only the same investigator to modify their data
-        if request.user.username != investigador_email:
-            return Response({"error": "No puedes modificar a otro investigador."}, status=403)
-
         data = request.data
-        # You might want to validate `data` here to ensure it's safe to update
-
-        # Update the investigator's data in the database
         investigadores.update_one({"_id": ObjectId(pk)}, {"$set": data})
+
         return Response({"message": "Investigador actualizado."})
-
-
-    def destroy(self, request, pk=None):
-        # No puede realizar esta acción
-        return Response({"error": "No se puede realizar esta acción."}, status=405)
     
     def get_grupos(self, request, pk=None):
         groups = grupos.find({"investigadores": ObjectId(pk)})
@@ -107,8 +134,20 @@ class InvestigadorViewSet(viewsets.ModelViewSet):
         projects = proyectos.find({"investigadores": ObjectId(pk)})
         projects = list(projects)
         return Response(projects)
+    
+    serializer_class = InvestigadorSerializer
+    queryset = investigadores.find()
+    
 
-class GrupoViewSet(viewsets.ModelViewSet):
+
+
+class GrupoViewSet(mixins.ListModelMixin,
+                          mixins.RetrieveModelMixin,
+                          mixins.UpdateModelMixin,
+                          viewsets.GenericViewSet):
+    
+    serializer_class = GrupoSerializer
+    pagination_class = GrupoPagination
 
     def get_permissions(self):
         # Permisos diferentes para métodos GET y otros
@@ -117,10 +156,37 @@ class GrupoViewSet(viewsets.ModelViewSet):
         return [IsAuthenticated()]
 
     def list(self, request):
-        all_groups = list(grupos.find())
+        search_query = request.query_params.get('search', None)
+        ordering = request.query_params.get('ordering', None)
+        query = {}
+        # buscar investigadores por nombre apellidos o email
+        if search_query:
+            query = {
+                "$or": [
+                    {"name": {"$regex": search_query, "$options": "i"}},
+                    {"description": {"$regex": search_query, "$options": "i"}},
+                    {"investigators": {"$regex": search_query, "$options": "i"}},
+                    {"projects": {"$regex": search_query, "$options": "i"}},
+                ]
+            }
+        
+        all_groups = list(grupos.find(query))
+
+        if ordering:
+            if ordering.startswith('-'):
+                order_by = ordering[1:]
+                all_groups = sorted(all_groups, key=lambda x: x.get(order_by, ''), reverse=True)
+            else:
+                all_groups = sorted(all_groups, key=lambda x: x.get(ordering, ''))
+
         for group in all_groups:
             group["id"] = str(group["_id"])
             del group["_id"]
+
+        page = self.paginate_queryset(all_groups)
+        if page is not None:
+            return self.get_paginated_response(page)
+        
         return Response(all_groups)
     
     def retrieve(self, request, pk=None):
@@ -173,7 +239,15 @@ class GrupoViewSet(viewsets.ModelViewSet):
     serializer_class = GrupoSerializer
     queryset = grupos.find()
 
-class ProyectoViewSet(viewsets.ModelViewSet):
+class ProyectoViewSet(mixins.ListModelMixin,
+                          mixins.RetrieveModelMixin,
+                          mixins.UpdateModelMixin,
+                          viewsets.GenericViewSet,):
+    
+    serializer_class = ProyectoSerializer
+    pagination_class = GrupoPagination
+
+
 
     def get_permissions(self):
         # Permisos diferentes para métodos GET y otros
@@ -182,12 +256,42 @@ class ProyectoViewSet(viewsets.ModelViewSet):
         return [IsAuthenticated()]
 
     def list(self, request):
-        all_projects = list(proyectos.find())
+        search_query = request.query_params.get('search', None)
+        ordering = request.query_params.get('ordering', None)
+        query = {}
+        # buscar investigadores por nombre apellidos o email
+        if search_query:
+            query = {
+                "$or": [
+                    {"name": {"$regex": search_query, "$options": "i"}},
+                    {"description": {"$regex": search_query, "$options": "i"}},
+                    {"investigators": {"$regex": search_query, "$options": "i"}},
+                    {"groups": {"$regex": search_query, "$options": "i"}},
+                    {"key_words": {"$regex": search_query, "$options": "i"}},
+                ]
+            }
+        
+        all_projects = list(proyectos.find(query))
+
+        if ordering:
+            if ordering.startswith('-'):
+                order_by = ordering[1:]
+                all_projects = sorted(all_projects, key=lambda x: x.get(order_by, ''), reverse=True)
+            else:
+                all_projects = sorted(all_projects, key=lambda x: x.get(ordering, ''))
+
         for project in all_projects:
             project["id"] = str(project["_id"])
             del project["_id"]
+
+        page = self.paginate_queryset(all_projects)
+        if page is not None:
+            return self.get_paginated_response(page)
+        
         return Response(all_projects)
-    
+
+
+
     def retrieve(self, request, pk=None):
         project = proyectos.find_one({"_id": ObjectId(pk)})
         if project:

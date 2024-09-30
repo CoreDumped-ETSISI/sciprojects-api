@@ -6,20 +6,28 @@ const URL =
     : "http://localhost:8000";
 
 console.log(URL);
-const tasksApi = axios.create({
+
+const investigadoresApi = axios.create({
   baseURL: `${URL}/api/v1/investigadores`,
 });
 
+// Obtener todos los investigadores con paginación, búsqueda y ordenamiento
+export const getInvestigadores = (page = 1, searchQuery = '', sortField = '', sortOrder = 'asc') => {
+  let queryParams = `?page=${page}`;
 
+  if (searchQuery) {
+    queryParams += `&search=${searchQuery}`;
+  }
 
+  if (sortField) {
+    queryParams += `&sortField=${sortField}&sortOrder=${sortOrder}`;
+  }
 
-// Obtener todos los investigadores
-export const getInvestigadores = () => tasksApi.get("/");
+  return investigadoresApi.get(`/${queryParams}`);
+};
 
 // Obtener un investigador por su ID
-export const getInvestigadorById = (id) => tasksApi.get(`/${id}/`);
-
+export const getInvestigadorById = (id) => investigadoresApi.get(`/${id}/`);
 
 // Actualizar un investigador
-export const updateInvestigador = (id, investigador) => tasksApi.put(`/${id}/`, investigador);
-
+export const updateInvestigador = (id, investigador) => investigadoresApi.put(`/${id}/`, investigador);
