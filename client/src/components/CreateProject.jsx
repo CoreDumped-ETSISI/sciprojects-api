@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { jwtDecode } from 'jwt-decode' // import dependency
 
 export function CreateProject() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -14,37 +15,120 @@ export function CreateProject() {
     const [projectKeywords, setProjectKeywords] = useState(""); 
     const [projectMoreInfo, setProjectMoreInfo] = useState("");
 
+    const fetchWithAuth = async (url, options = {}) => {
+        let token = localStorage.getItem('access_token');
+    
+        if (!isTokenValid(token)) {
+            // Si el token no es válido, intenta renovarlo
+            token = await refreshToken();
+            if (!token) {
+                return; // Si no se puede renovar el token, detén la ejecución
+            }
+        }
+    
+        // Añade el token a los headers de la solicitud
+        options.headers = {
+            ...options.headers,
+            "Authorization": `Bearer ${token}`,
+        };
+    
+        return fetch(url, options);
+    };
+
+
     useEffect(() => {
         const token = localStorage.getItem("access_token");
-        if (token) {
+        if (token && isTokenValid(token)) {
             setIsAuthenticated(true);
+        } else {
+            console.log("Token inválido");
+            // Mostrar cuando caduca el token
+            
+            console.log(jwtDecode(token).exp);
+            console.log(Date.now() / 1000);
+            alert("Tu sesión ha expirado. Por favor, inicia sesión de nuevo.");
+            window.location.href = "/signin"; // Redirige al usuario a iniciar sesión si el token no es válido
         }
     }, []);
 
     useEffect(() => {
-        async function fetchGrupos() {
-            try {
-                const response = await fetch("http://localhost:8000/api/v1/grupos/");
-                const data = await response.json();
-                setGrupos(data);
-            } catch (error) {
-                console.error("Error fetching grupos:", error);
-            }
-        }
-
         async function fetchResearchers() {
             try {
-                const response = await fetch("http://localhost:8000/api/v1/investigadores/");
+                const response = await fetchWithAuth("http://localhost:8000/api/v1/investigadores/");
+                if (!response.ok) {
+                    throw new Error("Error al obtener los investigadores");
+                }
                 const data = await response.json();
-                setResearchers(data);
-            } catch (error) {
-                console.error("Error fetching researchers:", error);
+                setResearchers(data.results);
+            } catch (err) {
+                console.error("Error al conectar con el servidor:", err);
+            }
+        }
+    
+        fetchResearchers();
+    }, []);
+    
+
+    useEffect(() => {
+        async function fetchGroups() {
+            try {
+                const response = await fetchWithAuth("http://localhost:8000/api/v1/grupos/");
+                if (!response.ok) {
+                    throw new Error("Error al obtener los grupos");
+                }
+                const data = await response.json();
+                setGrupos(data.results);
+            } catch (err) {
+                console.error("Error al conectar con el servidor:", err);
             }
         }
 
-        fetchGrupos();
-        fetchResearchers();
+        fetchGroups();
     }, []);
+
+
+    const isTokenValid = (token) => {
+        if (!token) return false;    
+        try {
+            const decodedToken = jwtDecode(token); // Decodifica el token JWT
+            const currentTime = Date.now() / 1000; // Tiempo actual en segundos
+            console.log(decodedToken, currentTime);
+            return decodedToken.exp > currentTime; // Compara la expiración con el tiempo actual
+        } catch (e) {
+            return false;
+        }
+    };
+
+    const refreshToken = async () => {
+        const refresh = localStorage.getItem('refresh_token');
+        
+        if (refresh) {
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/token/refresh/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ refresh }),
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem('access_token', data.access);  // Actualizar el token de acceso
+                    return data.access;
+                } else {
+                    console.log('Error al refrescar el token');
+                    return null;
+                }
+            } catch (err) {
+                console.log('Error en la conexión:', err);
+                return null;
+            }
+        }
+    };
+    
+
 
     const handleCreateProject = async () => {
         try {

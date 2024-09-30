@@ -29,6 +29,8 @@ export function ProyectosList() {
         fetchProyectos();
     }
 
+    
+
     , [currentPage, searchQuery, sortField, sortOrder]);
 
     const handleSearchChange = (e) => {

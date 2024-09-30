@@ -36,8 +36,6 @@ from rest_framework import viewsets, mixins
 from bson import ObjectId
 
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.response import Response
-from bson import ObjectId
 
 class InvestigadorPagination(PageNumberPagination):
     page_size = 20  # Tamaño de página por defecto
@@ -159,17 +157,20 @@ class GrupoViewSet(mixins.ListModelMixin,
         search_query = request.query_params.get('search', None)
         ordering = request.query_params.get('ordering', None)
         query = {}
-        # buscar investigadores por nombre apellidos o email
+        # buscar investigadores por nombre apellidos o email, tambien por nombre de proyecto y sus key_words
+
+
         if search_query:
             query = {
                 "$or": [
-                    {"name": {"$regex": search_query, "$options": "i"}},
-                    {"description": {"$regex": search_query, "$options": "i"}},
-                    {"investigators": {"$regex": search_query, "$options": "i"}},
-                    {"projects": {"$regex": search_query, "$options": "i"}},
+                    {"nombre": {"$regex": search_query, "$options": "i"}},
+                    {"descripcion": {"$regex": search_query, "$options": "i"}},
+                    {"investigadores": {"$regex": search_query, "$options": "i"}},
+                    {"proyectos": {"$regex": search_query, "$options": "i"}},
                 ]
             }
         
+
         all_groups = list(grupos.find(query))
 
         if ordering:
@@ -196,7 +197,8 @@ class GrupoViewSet(mixins.ListModelMixin,
             del group["_id"]
             researchers = investigadores.find({"_id": {"$in": group["investigadores"]}})
             projects = proyectos.find({"grupo": ObjectId(pk)})
-            group["projects"] = list(projects)
+            group["proyectos"] = list(projects)
+            group["investigadores"] = list(researchers)
             return Response(group)
         return Response({"error": "Grupo no encontrado."}, status=404)
     
@@ -263,10 +265,10 @@ class ProyectoViewSet(mixins.ListModelMixin,
         if search_query:
             query = {
                 "$or": [
-                    {"name": {"$regex": search_query, "$options": "i"}},
-                    {"description": {"$regex": search_query, "$options": "i"}},
-                    {"investigators": {"$regex": search_query, "$options": "i"}},
-                    {"groups": {"$regex": search_query, "$options": "i"}},
+                    {"nombre": {"$regex": search_query, "$options": "i"}},
+                    {"descripcion": {"$regex": search_query, "$options": "i"}},
+                    {"investigadores": {"$regex": search_query, "$options": "i"}},
+                    {"grupos": {"$regex": search_query, "$options": "i"}},
                     {"key_words": {"$regex": search_query, "$options": "i"}},
                 ]
             }

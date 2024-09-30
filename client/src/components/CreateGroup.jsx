@@ -12,23 +12,6 @@ export function CreateGroup() {
     const [link, setLink] = useState("");
     const [moreInfo, setMoreInfo] = useState("");
 
-    useEffect(() => {
-        async function fetchResearchers() {
-            try {
-                const response = await fetchWithAuth("http://localhost:8000/api/v1/investigadores/");
-                if (!response.ok) {
-                    throw new Error("Error al obtener los investigadores");
-                }
-                const data = await response.json();
-                setResearchers(data);
-            } catch (err) {
-                console.error("Error al conectar con el servidor:", err);
-            }
-        }
-    
-        fetchResearchers();
-    }, []);
-    
     // La función fetchWithAuth manejará la autenticación y renovación del token.
     const fetchWithAuth = async (url, options = {}) => {
         let token = localStorage.getItem('access_token');
@@ -58,12 +41,31 @@ export function CreateGroup() {
             console.log("Token inválido");
             // Mostrar cuando caduca el token
             
-            console.log(jwtDecode(token).exp);
-            console.log(Date.now() / 1000);
             alert("Tu sesión ha expirado. Por favor, inicia sesión de nuevo.");
             window.location.href = "/signin"; // Redirige al usuario a iniciar sesión si el token no es válido
         }
+    }, []);    
+
+    useEffect(() => {
+        async function fetchResearchers() {
+            try {
+                const response = await fetchWithAuth("http://localhost:8000/api/v1/investigadores/");
+                if (!response.ok) {
+                    throw new Error("Error al obtener los investigadores");
+                }
+                const data = await response.json();
+            
+                setResearchers(data.results);
+            } catch (err) {
+                console.error("Error al conectar con el servidor:", err);
+            }
+        }
+    
+        fetchResearchers();
     }, []);
+    
+
+
 
 
     const isTokenValid = (token) => {
@@ -130,7 +132,6 @@ export function CreateGroup() {
             if (response.ok) {
                 alert("Grupo creado");
             } else {
-                console.log(data);
                 alert(data.error || "Error al crear el grupo");
             }
         } catch (err) {

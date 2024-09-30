@@ -2,6 +2,7 @@ import React, {useState, useEffect} from 'react';
 import {getProyectos} from '../api/proyectos.api';
 import {getGrupoById} from '../api/grupos.api';
 import {getInvestigadorById} from '../api/investigadores.api';
+import './ProyectoCard.css'; // Asegúrate de crear este archivo para los estilos
 
 
 export function ProyectoCard({ proyecto }) {
@@ -53,26 +54,45 @@ export function ProyectoCard({ proyecto }) {
 
 
     return (
-        <div>
-            <h3>{proyecto.nombre}</h3>
-            <p>{proyecto.descripcion}</p>
-            <p>Grupo:</p>
-            {grupos.length > 0 ? (
-                grupos.map((grupo) => (
-                    <p key={grupo.id}>{grupo.nombre}</p>
-                ))
-            ) : (
-                <p>No tiene grupo</p>
-            )}
-            <p>Investigadores:</p>
-            {investigadores.length > 0 ? (
-                investigadores.map((investigador) => (
-                    <p key={investigador.id}>{investigador.nombre} {investigador.apellido}</p>
-                ))
-            ) : (
-                <p>No tiene investigadores</p>
-            )}
+        <div className="proyecto-card">
+            <div className="proyecto-header">
+                <h3 className="proyecto-nombre">{proyecto.nombre}</h3>
+                <p>{proyecto.descripcion}</p>
+            </div>
 
+            <div className="proyecto-body">
+                <div className="tarjeta-lista">
+                    <h4>Grupos:</h4>
+                    {grupos.length > 0 ? (
+                        grupos.map((grupo) => (
+                            <div key={grupo.id} className="tarjeta">
+                                <p className="grupo-nombre">
+                                    <a href={`/grupos/${grupo.id}`} className="grupo-enlace">{grupo.nombre}</a>
+                                </p>
+                            </div>
+                        ))
+                    ) : (
+                        <p>No tiene grupo</p>
+                    )}
+                </div>
+
+                <div className="tarjeta-lista">
+                    <h4>Investigadores:</h4>
+                    {investigadores.length > 0 ? (
+                        investigadores.map((investigador) => (
+                            <div key={investigador.id} className="tarjeta">
+                                <p className="investigador-nombre">
+                                    <a href={`/investigadores/${investigador.id}`} className="investigador-enlace">
+                                        {investigador.nombre} {investigador.apellido}
+                                    </a>
+                                </p>
+                            </div>
+                        ))
+                    ) : (
+                        <p>No tiene investigadores</p>
+                    )}
+                </div>
+            </div>
         </div>
     );
-}
+};

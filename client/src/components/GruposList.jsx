@@ -18,7 +18,6 @@ export function GruposList() {
         async function fetchGrupos() {
             try {
                 const res = await getGrupos(currentPage, searchQuery, sortField, sortOrder);
-                console.log(res.data.results);
                 setGrupos(res.data.results);
                 setPrevious(res.data.previous);
                 setNext(res.data.next);

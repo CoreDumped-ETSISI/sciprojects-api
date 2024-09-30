@@ -13,7 +13,23 @@ const gruposApi = axios.create({
   baseURL: `${URL}/api/v1/grupos/`,
 });
 
-export const getGrupos = () => gruposApi.get("/");
+export const getGrupos = (page = 1, searchQuery = '', sortField = '', sortOrder = 'asc') => {
+  let queryParams = `?page=${page}`;
+
+  if (searchQuery) {
+    queryParams += `&search=${searchQuery}`;
+  }
+
+  if (sortField) {
+    queryParams += `&sortField=${sortField}&sortOrder=${sortOrder}`;
+  }
+
+  return gruposApi.get(`${queryParams}`);
+}
+
+
+
+
 export const getGrupoById = (id) => gruposApi.get(`/${id}/`);
 export const createGrupo = (nuevoGrupo) => gruposApi.post("/", nuevoGrupo);
 export const updateGrupo = (id, grupo) => gruposApi.put(`/${id}/`, grupo);

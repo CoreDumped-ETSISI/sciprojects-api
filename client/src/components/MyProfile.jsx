@@ -16,6 +16,7 @@ export function MyProfile() {
         if (user) {
             setUser(user);
             const investigador = fetchInvestigador(user);
+            setInvestigador(investigador);
         }
     }
         , []);
@@ -32,31 +33,43 @@ export function MyProfile() {
 
             });
 
+            
             const data = await response.json();
-
-            console.log(data, 'data');
             if (response.ok) {
-                setInvestigador(data[0]);
+                // Devolver aquel investigador que tenga el correo del usuario
+                for (let i = 0; i < data.results.length; i++) {
+                    if (data.results[i].email === email) {
+                        setInvestigador(data.results[i]);
+                    }
+                }
+
             } else {
                 setError(data.error || 'Error al cargar perfil');
+                // Hacer login nuevamente
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                window.location.href = '/signin';
             }
         } catch (err) {
+            console.log(err);
             setError('Error al conectar con el servidor');
 
         }
     }
 
+
     const handleUpdateProfile = async (e) => {
         e.preventDefault(); // Evita el comportamiento por defecto del formulario
         try {
             console.log(investigador, 'investigador');
-        
+
             const response = await fetch(`http://localhost:8000/api/v1/investigadores/${investigador.id}/`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
                 },
+
                 body: JSON.stringify(investigador),
             });
 

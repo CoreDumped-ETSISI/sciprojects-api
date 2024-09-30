@@ -16,7 +16,20 @@ const proyectosApi = axios.create({
 
 
 // Obtener todos los proyectos
-export const getProyectos = () => proyectosApi.get("/");
+export const getProyectos = (page = 1, searchQuery = '', sortField = '', sortOrder = 'asc') => {
+  let queryParams = `?page=${page}`;
+
+  if (searchQuery) {
+    queryParams += `&search=${searchQuery}`;
+  }
+
+  if (sortField) {
+    queryParams += `&sortField=${sortField}&sortOrder=${sortOrder}`;
+  }
+
+  return proyectosApi.get(`${queryParams}`);
+}
+
 
 export const getProyectoById = (id) => proyectosApi.get(`/${id}/`);
 
