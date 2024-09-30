@@ -14,29 +14,12 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from APP import views
 
+
+# agregar la ruta de la API
 urlpatterns = [
-    path('', views.home, name='home'),
-    path("admin/", admin.site.urls),
-    path("signup/", views.signup, name="signup"),
-    path("signin/", views.signin, name="signin"),
-    path("logout/", views.signout, name="logout"),
-    path("investigadores/", views.get_investigadores, name="investigadores"),
-    path("investigadores/<str:investigador_id>/", views.get_investigadores, name="investigadores"),
-
-    path("grupos/", views.get_grupos, name="grupos"),
-    path("grupos/create/", views.create_group, name="create_group"),
-    path("grupos/<str:grupo_id>/", views.get_grupos, name="grupos"),
-
-    path("proyectos/", views.get_proyectos, name="proyectos"),
-    path("proyectos/create/", views.create_project, name="create_project"),
-    path("proyectos/<str:proyecto_id>/", views.get_proyectos, name="proyectos"),
-
-    path("profile/", views.modify_profile, name="modify_profile"),
-    path("profile/password/", views.modify_password, name="modify_password"),
-
-
-
+    path('admin/', admin.site.urls),
+    path('api/v1/', include('APP.urls')),
 ]

@@ -1,0 +1,26 @@
+
+
+
+/* Navigation.css */
+.navbar {
+    background-color: #343a40; /* Color oscuro */
+}
+
+.nav-link {
+    color: #f8f9fa !important; /* Color blanco para las opciones */
+    transition: color 0.3s ease; /* Efecto suave en hover */
+}
+
+.nav-link:hover {
+    color: #ffc107 !important; /* Color dorado en hover */
+}
+
+.navbar-brand img {
+    max-height: 50px; /* Ajusta el tamaño del logo */
+}
+
+@media (max-width: 992px) {
+    .navbar-brand img {
+        max-height: 40px; /* Ajuste para pantallas pequeñas */
+    }
+}

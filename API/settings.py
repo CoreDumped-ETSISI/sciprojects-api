@@ -38,12 +38,18 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "APP"
+    "APP",
+    "rest_framework",
+    "rest_framework.authtoken",
+    "corsheaders",
+    "rest_framework_simplejwt",
+
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -76,17 +82,16 @@ WSGI_APPLICATION = "API.wsgi.application"
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "djongo",
-        "NAME": "WEB_INVESTIGACION",
-        "ENFORCE_SCHEMA": False,
-        "CLIENT": {
-            "host": "localhost",
-            "port": 27017,
-        }
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+# USAMOS MONGODB CON PYMONGO
+from pymongo import MongoClient
 
+MONGO_CLIENT = MongoClient('mongodb://localhost:27017/')
+MONGO_DB = MONGO_CLIENT['WEB_INVESTIGACION']
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -149,3 +154,29 @@ from pymongo import MongoClient
 # Conexión a MongoDB
 MONGO_CLIENT = MongoClient('mongodb://localhost:27017/')
 MONGO_DB = MONGO_CLIENT['nombre_base_datos']
+
+# CORS authorization
+CORS_ALLOW_ALL_ORIGINS = True
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
+
+from datetime import timedelta
+# Configuración de JWT
+SIMPLE_JWT = {
+     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
+     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+     'ROTATE_REFRESH_TOKENS': True,
+     'BLACKLIST_AFTER_ROTATION': True
+}
+
+# CORS
+CORS_ORIGIN_WHITELIST = ['http://localhost:5173']
