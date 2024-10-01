@@ -10,17 +10,20 @@ export function InvestigadoresList() {
   const [sortField, setSortField] = useState('');
   const [sortOrder, setSortOrder] = useState('asc');
   const [error, setError] = useState('');
-  const [previous, setPrevious] = useState('');
-  const [next, setNext] = useState('');
+
+  // Cantidad de investigadores por página (puede ser un valor fijo o venir del backend)
+  const investigadoresPerPage = 10;
 
   useEffect(() => {
     async function fetchInvestigadores() {
       try {
+        // Petición a la API con los parámetros de paginación, búsqueda, orden, etc.
         const res = await getInvestigadores(currentPage, searchQuery, sortField, sortOrder);
+        
         setInvestigadores(res.data.results);
-        setTotalPages(res.data.count);
-        setPrevious(res.data.previous);
-        setNext(res.data.next);
+
+        // Calcular el número total de páginas basadas en el total de resultados y por página
+        setTotalPages(Math.ceil(res.data.count / investigadoresPerPage));
       } catch (error) {
         console.error("Error fetching investigadores:", error);
         setError("Error fetching investigadores.");
@@ -31,7 +34,7 @@ export function InvestigadoresList() {
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(1); // Reset to the first page when searching
+    setCurrentPage(1); // Resetear a la primera página al buscar
   };
 
   const handleSortChange = (field) => {
@@ -41,10 +44,13 @@ export function InvestigadoresList() {
       setSortField(field);
       setSortOrder('asc');
     }
+    setCurrentPage(); // Resetear a la primera página al cambiar el orden
   };
 
   const handlePageChange = (page) => {
-    setCurrentPage(page);
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
   };
 
   return (
@@ -61,17 +67,17 @@ export function InvestigadoresList() {
       </div>
 
       <div>
-        <button onClick={() => handleSortChange('name')}>Ordenar por Nombre</button>
-        <button onClick={() => handleSortChange('lastname')}>Ordenar por Apellido</button>
+        <button onClick={() => handleSortChange('nombre')}>Ordenar por Nombre</button>
+        <button onClick={() => handleSortChange('apellido')}>Ordenar por Apellido</button>
       </div>
 
       <div>
         {investigadores.map((investigador) => (
-          <InvestigadorCard key={investigador.id} investigador={investigador} />
+          <InvestigadorCard key={investigador.id} id={investigador.id} />
         ))}
       </div>
 
-      <div>
+      <div className="pagination-controls">
         <button
           disabled={currentPage === 1} // Deshabilitar si estamos en la primera página
           onClick={() => handlePageChange(currentPage - 1)}
@@ -87,8 +93,6 @@ export function InvestigadoresList() {
         >
           Siguiente
         </button>
-
-
       </div>
     </div>
   );

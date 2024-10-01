@@ -1,50 +1,70 @@
 import React, { useEffect, useState } from 'react';
-import { getInvestigadorById } from '../api/investigadores.api'; // Asegúrate de que esta función está correctamente implementada
-import { getProyectos } from '../api/proyectos.api'; // Función para obtener un proyecto por ID
-import './GrupoCard.css'; // Asegúrate de crear este archivo para los estilos
+import { getInvestigadorById } from '../api/investigadores.api';
+import { getProyectos } from '../api/proyectos.api';
+import './GrupoCard.css';
+import { Link, useParams } from 'react-router-dom';
+import { getGrupoById } from '../api/grupos.api';
 
-export function GrupoCard({ grupo }) {
+export function GrupoCard({ id }) {
     const [investigadores, setInvestigadores] = useState([]);
     const [proyectos, setProyectos] = useState([]);
+    const [grupo, setGrupo] = useState(null); // Cambia a null para verificar la carga
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchGrupo() {
+            try {
+                const res = await getGrupoById(id); // Obtener los datos del grupo usando el id
+                setGrupo(res.data);
+                setLoading(false);
+            } catch (error) {
+                
+                console.error("Error fetching grupo:", error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchGrupo();
+    }, [id]);
 
     useEffect(() => {
         async function fetchInvestigadores() {
-            const investigadoresPromises = grupo.investigadores.map(async (id) => {
-                const res = await getInvestigadorById(id); // Obtener el investigador por ID
-                return res.data; // Asegúrate de que esto devuelve el investigador correcto
-            });
-            const investigadoresData = await Promise.all(investigadoresPromises);
-            setInvestigadores(investigadoresData);
+            if (grupo && grupo.investigadores && grupo.investigadores.length > 0) {
+                const investigadoresPromises = grupo.investigadores.map(async (id) => {
+                    const res = await getInvestigadorById(id);
+                    return res.data;
+                });
+                const investigadoresData = await Promise.all(investigadoresPromises);
+                setInvestigadores(investigadoresData);
+            }
         }
-
-        if (grupo.investigadores && grupo.investigadores.length > 0) {
-            fetchInvestigadores();
-        }
-    }, [grupo.investigadores]);
+        fetchInvestigadores();
+    }, [grupo]);
 
     useEffect(() => {
-
-        // Recorremos todos los proyectos y si proyecto.grupos contiene el id del grupo, lo añadimos a la lista
         async function fetchProyectos() {
-            const res = await getProyectos();
-            const proyectosFiltrados = res.data.results.filter(proyecto =>
-                proyecto.grupos && proyecto.grupos.includes(grupo.id)                
-            );
-            setProyectos(proyectosFiltrados);
-            console.log(proyectosFiltrados, 'proyectosFiltrados');
+            try {
+                const res = await getProyectos();
+                const proyectosFiltrados = res.data.results.filter(proyecto =>
+                    proyecto.grupos && proyecto.grupos.includes(grupo?.id)
+                );
+                setProyectos(proyectosFiltrados);
+            } catch (error) {
+                console.error("Error fetching proyectos:", error);
+            }
         }
-        fetchProyectos();
+        if (grupo) {
+            fetchProyectos();
+        }
+    }, [grupo]);
 
-
-
-    }
-    , [grupo.id]); 
+    if (loading) return <p>Cargando...</p>; // Muestra un mensaje de carga
 
     return (
         <div className="grupo-card">
             <div className="grupo-header">
                 <h2>
-                    <a href={`/grupos/${grupo.id}`} className="grupo-enlace">{grupo.nombre}</a> {/* Título del grupo como enlace */}
+                    <Link to={`/grupos/${grupo.id}`} className="grupo-enlace">{grupo.nombre}</Link>
                 </h2>
                 <p>{grupo.descripcion}</p>
             </div>
@@ -56,9 +76,9 @@ export function GrupoCard({ grupo }) {
                         investigadores.map((investigador) => (
                             <div key={investigador.id} className="tarjeta">
                                 <p>
-                                    <a href={`/investigadores/${investigador.id}`} className="investigador-enlace">
+                                    <Link to={`/investigadores/${investigador.id}`} className="investigador-enlace">
                                         {investigador.nombre} {investigador.apellido}
-                                    </a>
+                                    </Link>
                                 </p>
                             </div>
                         ))
@@ -73,9 +93,9 @@ export function GrupoCard({ grupo }) {
                         proyectos.map((proyecto) => (
                             <div key={proyecto.id} className="tarjeta">
                                 <p>
-                                    <a href={`/proyectos/${proyecto.id}`} className="proyecto-enlace">
+                                    <Link to={`/proyectos/${proyecto.id}`} className="proyecto-enlace">
                                         {proyecto.nombre}
-                                    </a>
+                                    </Link>
                                 </p>
                             </div>
                         ))
@@ -86,5 +106,4 @@ export function GrupoCard({ grupo }) {
             </div>
         </div>
     );
-
-};
+}

@@ -11,16 +11,15 @@ export function ProyectosList() {
     const [sortField, setSortField] = useState('');
     const [sortOrder, setSortOrder] = useState('asc');
     const [error, setError] = useState('');
-    const [previous, setPrevious] = useState('');
-    const [next, setNext] = useState('');
 
+    const proyectosPerPage = 10;
+    
     useEffect(() => {
         async function fetchProyectos() {
             try {
                 const res = await getProyectos(currentPage, searchQuery, sortField, sortOrder);
                 setProyectos(res.data.results);
-                setPrevious(res.data.previous);
-                setNext(res.data.next);
+                setTotalPages(Math.ceil(res.data.count / 10));
             } catch (error) {
                 console.error("Error fetching proyectos:", error);
                 setError("Error fetching proyectos.");
@@ -29,27 +28,32 @@ export function ProyectosList() {
         fetchProyectos();
     }
 
-    
+
 
     , [currentPage, searchQuery, sortField, sortOrder]);
 
+
+
     const handleSearchChange = (e) => {
         setSearchQuery(e.target.value);
-        setCurrentPage(1); // Reset to the first page when searching
-    };
-
-    const handleSortChange = (field) => {
+        setCurrentPage(1); // Resetear a la primera página al buscar
+      };
+    
+      const handleSortChange = (field) => {
         if (sortField === field) {
-            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+          setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
         } else {
-            setSortField(field);
-            setSortOrder('asc');
+          setSortField(field);
+          setSortOrder('asc');
         }
-    };
-
-    const handlePageChange = (page) => {
-        setCurrentPage(page);
-    };
+        setCurrentPage(); // Resetear a la primera página al cambiar el orden
+      };
+    
+      const handlePageChange = (page) => {
+        if (page >= 1 && page <= totalPages) {
+          setCurrentPage(page);
+        }
+      };
 
 
     return (
@@ -64,6 +68,8 @@ export function ProyectosList() {
                     onChange={handleSearchChange}
                     placeholder="Buscar proyecto"
                 />
+            </div>
+            <div>
                 <button onClick={() => handleSortChange('nombre')}>Sort by name</button>
                 <button onClick={() => handleSortChange('fechaInicio')}>Sort by start date</button>
                 <button onClick={() => handleSortChange('fechaFin')}>Sort by end date</button>
@@ -71,18 +77,31 @@ export function ProyectosList() {
 
             <div>
                 {proyectos.map((proyecto) => (
-                    <ProyectoCard key={proyecto.id} proyecto={proyecto} />
+                    <ProyectoCard key={proyecto.id} id={proyecto.id} />
                 ))}
             </div>
 
-            <div>
-                <button disabled={!previous} onClick={() => handlePageChange(currentPage - 1)}>Previous</button>
-                <button disabled={!next} onClick={() => handlePageChange(currentPage + 1)}>Next</button>
-            </div>
+
+            <div className="pagination-controls">
+            <button
+                disabled={currentPage === 1} // Deshabilitar si estamos en la primera página
+                onClick={() => handlePageChange(currentPage - 1)}
+                >
+                Anterior
+            </button>
+            <span>
+                Página {currentPage} de {totalPages}
+            </span>
+            <button
+                disabled={currentPage === totalPages} // Deshabilitar si estamos en la última página
+                onClick={() => handlePageChange(currentPage + 1)}
+                >
+                Siguiente
+            </button>
         </div>
+    </div>
     );
 
 
 
 }
-
