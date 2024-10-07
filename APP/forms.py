@@ -10,14 +10,11 @@ investigadores = my_db["investigadores"]
 grupos = my_db["grupos"]
 proyectos = my_db["proyectos"]
 
-# Extendemos la clase User A Investigador
-
 
 class InvestigadorForm(forms.Form):
     nombre = forms.CharField(label='Nombre', max_length=100)
     apellidos = forms.CharField(label='Apellidos', max_length=100)
     link = forms.URLField(label='Link', max_length=200, required=False)
-    #foto = forms.ImageField(label='Foto', required=False)
 
     def save(self):
         # Crear un nuevo documento en la colección de investigadores
@@ -25,7 +22,6 @@ class InvestigadorForm(forms.Form):
             "nombre": self.cleaned_data['nombre'],
             "apellidos": self.cleaned_data['apellidos'],
             "link": self.cleaned_data['link'],
-            #"foto": self.cleaned_data['foto'],
         }
         return investigadores.insert_one(investigador).inserted_id
     
@@ -64,12 +60,9 @@ class GrupoForm(forms.Form):
 
 
 class ProyectoForm(forms.Form):
-    # Definir campos básicos del proyecto
     nombre = forms.CharField(label='Nombre', max_length=100)
     descripcion = forms.CharField(label='Descripción', widget=forms.Textarea, required=False)
     link = forms.URLField(label='Link', max_length=200, required=False)
-    fecha_inicio = forms.DateField(label='Fecha de inicio', required=False, widget=forms.SelectDateWidget)
-    fecha_fin = forms.DateField(label='Fecha de fin', required=False, widget=forms.SelectDateWidget)
     keywords = forms.CharField(label='Keywords', max_length=200, required=False)
 
     # Campos para las relaciones ManyToMany con investigadores y grupos
@@ -105,8 +98,6 @@ class ProyectoForm(forms.Form):
             "nombre": self.cleaned_data['nombre'],
             "descripcion": self.cleaned_data['descripcion'],
             "link": self.cleaned_data['link'],
-            "fecha_inicio": self.cleaned_data['fecha_inicio'],
-            "fecha_fin": self.cleaned_data['fecha_fin'],
             "keywords": self.cleaned_data['keywords'],
             "investigadores": self.cleaned_data['investigadores'],
             "grupos": self.cleaned_data['grupos'],
@@ -136,6 +127,7 @@ def UserCreationForm(ModelForm):
             if User.objects.filter(username=username).exists():
                 raise forms.ValidationError("Ya existe un usuario con este correo.")
             return username
+        
         def save(self, commit=True):
             user = super().save(commit=False)
             # Crear un usuario con contraseña aleatoria

@@ -17,8 +17,7 @@ router.register(r'proyectos', views.ProyectoViewSet, basename='proyecto')
 
 urlpatterns = [
     
-    #path('docs/', include_docs_urls(title='API de Investigacion')),
-#    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    #path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 
     path('', include(router.urls)),
     path('signup/', views.signup, name='signup'),

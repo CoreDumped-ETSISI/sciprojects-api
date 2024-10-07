@@ -40,7 +40,10 @@ function App() {
 
         <Route path="/profile" element={<MyProfilePage />} />
         <Route path="/create-group" element={<CreateGroupPage />} />
+        <Route path="/modify-group/:id" element={<CreateGroupPage />} />
+
         <Route path="/create-project" element={<CreateProjectPage />} />
+        <Route path="/modify-project/:id" element={<CreateProjectPage />} />
 
       </Routes>
     </BrowserRouter>

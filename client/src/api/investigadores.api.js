@@ -12,8 +12,14 @@ const investigadoresApi = axios.create({
 });
 
 // Obtener todos los investigadores con paginación, búsqueda y ordenamiento
-export const getInvestigadores = (page = 1, searchQuery = '', sortField = '', sortOrder = 'asc') => {
-  let queryParams = `?page=${page}`;
+export const getInvestigadores = (
+  page = 1,
+  pageSize = 1,  // Nuevo parámetro para el tamaño de la página
+  searchQuery = '',
+  sortField = '',
+  sortOrder = 'asc'
+) => {
+  let queryParams = `?page=${page}&page_size=${pageSize}`;  // Añadir el tamaño de página a los parámetros de consulta
 
   if (searchQuery) {
     queryParams += `&search=${searchQuery}`;

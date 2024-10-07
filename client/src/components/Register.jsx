@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import "./styles/Register.css"; // Asegúrate de crear este archivo para los estilos
 
 export function Register() {
   const [email, setEmail] = useState("");
@@ -37,20 +38,22 @@ export function Register() {
   };
 
   return (
-    <div>
-      <form onSubmit={handleSubmit}>
+    <div className="register-container">
+      <h2>Registro de Usuario</h2>
+      <form onSubmit={handleSubmit} className="register-form">
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Ingresa tu correo"
           required
+          className="input-field"
         />
-        <button type="submit">Register</button>
+        <button type="submit" className="submit-button">Registrar</button>
       </form>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {message && <p style={{ color: "green" }}>{message}</p>}
+      {error && <p className="error-message">{error}</p>}
+      {message && <p className="success-message">{message}</p>}
     </div>
   );
 }

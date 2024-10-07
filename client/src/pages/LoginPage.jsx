@@ -5,7 +5,6 @@ export const LoginPage = () => {
     return (
         <div>
             <Navigation />
-            <h1>Login</h1>
             <Login />
         </div>
     );

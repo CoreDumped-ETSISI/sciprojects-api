@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-
-import { jwtDecode } from 'jwt-decode' // import dependency
+import { jwtDecode } from 'jwt-decode'; // import dependency
+import "./styles/CreateGroup.css"; // Asegúrate de crear este archivo para los estilos
+import { useParams } from "react-router-dom";
 
 
 export function CreateGroup() {
@@ -12,24 +13,24 @@ export function CreateGroup() {
     const [link, setLink] = useState("");
     const [moreInfo, setMoreInfo] = useState("");
 
-    // La función fetchWithAuth manejará la autenticación y renovación del token.
+    const { id } = useParams();
+
+
     const fetchWithAuth = async (url, options = {}) => {
         let token = localStorage.getItem('access_token');
-    
+
         if (!isTokenValid(token)) {
-            // Si el token no es válido, intenta renovarlo
             token = await refreshToken();
             if (!token) {
-                return; // Si no se puede renovar el token, detén la ejecución
+                return;
             }
         }
-    
-        // Añade el token a los headers de la solicitud
+
         options.headers = {
             ...options.headers,
             "Authorization": `Bearer ${token}`,
         };
-    
+
         return fetch(url, options);
     };
 
@@ -38,13 +39,10 @@ export function CreateGroup() {
         if (token && isTokenValid(token)) {
             setIsAuthenticated(true);
         } else {
-            console.log("Token inválido");
-            // Mostrar cuando caduca el token
-            
             alert("Tu sesión ha expirado. Por favor, inicia sesión de nuevo.");
-            window.location.href = "/signin"; // Redirige al usuario a iniciar sesión si el token no es válido
+            window.location.href = "/signin";
         }
-    }, []);    
+    }, []);
 
     useEffect(() => {
         async function fetchResearchers() {
@@ -54,27 +52,21 @@ export function CreateGroup() {
                     throw new Error("Error al obtener los investigadores");
                 }
                 const data = await response.json();
-            
                 setResearchers(data.results);
             } catch (err) {
                 console.error("Error al conectar con el servidor:", err);
             }
         }
-    
+
         fetchResearchers();
     }, []);
-    
-
-
-
 
     const isTokenValid = (token) => {
-        if (!token) return false;    
+        if (!token) return false;
         try {
-            const decodedToken = jwtDecode(token); // Decodifica el token JWT
-            const currentTime = Date.now() / 1000; // Tiempo actual en segundos
-            console.log(decodedToken, currentTime);
-            return decodedToken.exp > currentTime; // Compara la expiración con el tiempo actual
+            const decodedToken = jwtDecode(token);
+            const currentTime = Date.now() / 1000;
+            return decodedToken.exp > currentTime;
         } catch (e) {
             return false;
         }
@@ -82,7 +74,6 @@ export function CreateGroup() {
 
     const refreshToken = async () => {
         const refresh = localStorage.getItem('refresh_token');
-        
         if (refresh) {
             try {
                 const response = await fetch('http://localhost:8000/api/v1/token/refresh/', {
@@ -92,11 +83,10 @@ export function CreateGroup() {
                     },
                     body: JSON.stringify({ refresh }),
                 });
-                
+
                 const data = await response.json();
-                
                 if (response.ok) {
-                    localStorage.setItem('access_token', data.access);  // Actualizar el token de acceso
+                    localStorage.setItem('access_token', data.access);
                     return data.access;
                 } else {
                     console.log('Error al refrescar el token');
@@ -108,9 +98,7 @@ export function CreateGroup() {
             }
         }
     };
-    
-    
-    
+
     const handleCreateGroup = async () => {
         try {
             const response = await fetchWithAuth("http://localhost:8000/api/v1/grupos/", {
@@ -124,11 +112,11 @@ export function CreateGroup() {
                     'investigadores': selectedResearchers,
                     'link': link,
                     'more_info': moreInfo,
-                    }),
+                }),
             });
-    
+
             const data = await response.json();
-    
+
             if (response.ok) {
                 alert("Grupo creado");
             } else {
@@ -138,41 +126,112 @@ export function CreateGroup() {
             alert("Error al conectar con el servidor");
         }
     };
-    
+
+    const handleUpdateGroup = async () => {
+        try {
+            
+            const response = await fetchWithAuth(`http://localhost:8000/api/v1/grupos/${id}/`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    'nombre': name,
+                    'descripcion': description,
+                    'investigadores': selectedResearchers,
+                    'link': link,
+                    'more_info': moreInfo,
+                }),
+            });
+        
+            
+            const data = await response.json();
+
+            if (response.ok) {
+                alert("Grupo modificado");
+            } else {
+                alert(data.error || "Error al modificar el grupo");
+            }
+        } catch (err) {
+            alert("Error al conectar con el servidor");
+        }
+    }
 
     const handleSelectResearcher = (researcher) => {
-        const researcherId = researcher.id; // Asegúrate de que aquí estás obteniendo el ID correcto
+        const researcherId = researcher.id;
         if (selectedResearchers.includes(researcherId)) {
-            // Si el investigador ya está seleccionado, lo eliminamos por su ID
             setSelectedResearchers(selectedResearchers.filter((id) => id !== researcherId));
         } else {
-            // Si no está seleccionado, lo agregamos
             setSelectedResearchers([...selectedResearchers, researcherId]);
         }
     };
-    
 
     return (
-        <div>
-            <input type="text" placeholder="Nombre" value={name} onChange={(e) => setName(e.target.value)} />
-            <input type="text" placeholder="Descripción" value={description} onChange={(e) => setDescription(e.target.value)} />
+        <div className="create-group-container">
 
-            <h2>Investigadores</h2>
-            {researchers.map((researcher) => (
-                <div key={researcher.id}>
-                    <input
-                        type="checkbox"
-                        checked={selectedResearchers.includes(researcher.id)}
-                        onChange={() => handleSelectResearcher(researcher)}
-                    />
-                    <label>{researcher.nombre} {researcher.apellido}</label>
-                </div>
-            ))}
+            <h2>{id ? "Modificar grupo" : "Crear grupo"}</h2>
 
-            <input type="text" placeholder="Enlace" value={link} onChange={(e) => setLink(e.target.value)} />
-            <input type="text" placeholder="Más información" value={moreInfo} onChange={(e) => setMoreInfo(e.target.value)} />
 
-            <button onClick={handleCreateGroup}>Crear grupo</button>
+    
+            <input 
+                type="text" 
+                placeholder="Nombre" 
+                value={name} 
+                onChange={(e) => setName(e.target.value)} 
+                className="input-field" 
+                required 
+            />
+            
+            <input 
+                type="text" 
+                placeholder="Descripción" 
+                value={description} 
+                onChange={(e) => setDescription(e.target.value)} 
+                className="input-field" 
+                required 
+            />
+    
+            <h3>Investigadores</h3>
+            <select 
+                multiple 
+                value={selectedResearchers} 
+                onChange={(e) => {
+                    const options = e.target.selectedOptions;
+                    const selected = Array.from(options).map(option => option.value);
+                    setSelectedResearchers(selected);
+                }} 
+                className="select-field"
+            >
+                {researchers.map((researcher) => (
+                    <option key={researcher.id} value={researcher.id}>
+                        {researcher.nombre} {researcher.apellido}
+                    </option>
+                ))}
+            </select>
+    
+            <input 
+                type="text" 
+                placeholder="Enlace" 
+                value={link} 
+                onChange={(e) => setLink(e.target.value)} 
+                className="input-field" 
+            />
+            
+            <input 
+                type="text" 
+                placeholder="Más información" 
+                value={moreInfo} 
+                onChange={(e) => setMoreInfo(e.target.value)} 
+                className="input-field" 
+            />
+    
+            
+            { id ? (
+                <button onClick={handleUpdateGroup} className="submit-button">Modificar grupo</button>
+            ) : (
+                <button onClick={handleCreateGroup} className="submit-button">Crear grupo</button>
+            )}
+
         </div>
     );
-}
+}    

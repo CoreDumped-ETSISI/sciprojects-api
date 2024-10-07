@@ -10,27 +10,27 @@ export function InvestigadoresList() {
   const [sortField, setSortField] = useState('');
   const [sortOrder, setSortOrder] = useState('asc');
   const [error, setError] = useState('');
-
-  // Cantidad de investigadores por página (puede ser un valor fijo o venir del backend)
-  const investigadoresPerPage = 10;
+  
+  // Estado para el tamaño de la página
+  const [pageSize, setPageSize] = useState(10); // Valor por defecto
 
   useEffect(() => {
     async function fetchInvestigadores() {
       try {
         // Petición a la API con los parámetros de paginación, búsqueda, orden, etc.
-        const res = await getInvestigadores(currentPage, searchQuery, sortField, sortOrder);
+        const res = await getInvestigadores(currentPage, pageSize, searchQuery, sortField, sortOrder);
         
         setInvestigadores(res.data.results);
 
         // Calcular el número total de páginas basadas en el total de resultados y por página
-        setTotalPages(Math.ceil(res.data.count / investigadoresPerPage));
+        setTotalPages(Math.ceil(res.data.count / pageSize));
       } catch (error) {
         console.error("Error fetching investigadores:", error);
         setError("Error fetching investigadores.");
       }
     }
     fetchInvestigadores();
-  }, [currentPage, searchQuery, sortField, sortOrder]);
+  }, [currentPage, searchQuery, sortField, sortOrder, pageSize]); // Añadir pageSize como dependencia
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
@@ -44,13 +44,18 @@ export function InvestigadoresList() {
       setSortField(field);
       setSortOrder('asc');
     }
-    setCurrentPage(); // Resetear a la primera página al cambiar el orden
+    setCurrentPage(1); // Resetear a la primera página al cambiar el orden
   };
 
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
     }
+  };
+
+  const handlePageSizeChange = (e) => {
+    setPageSize(Number(e.target.value)); // Actualizar el tamaño de la página
+    setCurrentPage(1); // Resetear a la primera página al cambiar el tamaño
   };
 
   return (
@@ -69,6 +74,16 @@ export function InvestigadoresList() {
       <div>
         <button onClick={() => handleSortChange('nombre')}>Ordenar por Nombre</button>
         <button onClick={() => handleSortChange('apellido')}>Ordenar por Apellido</button>
+      </div>
+
+      <div>
+        <label htmlFor="pageSize">Resultados por página:</label>
+        <select id="pageSize" value={pageSize} onChange={handlePageSizeChange}>
+          <option value={5}>5</option>
+          <option value={10}>10</option>
+          <option value={20}>20</option>
+          <option value={50}>50</option>
+        </select>
       </div>
 
       <div>

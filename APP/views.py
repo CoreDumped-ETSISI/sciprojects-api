@@ -1,5 +1,4 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.forms import AuthenticationForm
+from django.shortcuts import redirect
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.models import User
 from django.db import IntegrityError
@@ -8,12 +7,18 @@ import os
 import pymongo
 from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.decorators import authentication_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
+from rest_framework import viewsets, mixins
+from rest_framework.pagination import PageNumberPagination
+
+from bson import ObjectId
+from django.utils.crypto import get_random_string
+from .serializers import InvestigadorSerializer, GrupoSerializer, ProyectoSerializer
 
 my_client = pymongo.MongoClient("mongodb://localhost:27017/")
 my_db = my_client["WEB_INVESTIGACION"]
@@ -21,33 +26,21 @@ investigadores = my_db["investigadores"]
 grupos = my_db["grupos"]
 proyectos = my_db["proyectos"]
 
-from django.db import IntegrityError
-from django.core.mail import send_mail
-from rest_framework.response import Response
-
-from rest_framework.permissions import AllowAny, IsAuthenticated
-import os
-from .serializers import InvestigadorSerializer, GrupoSerializer, ProyectoSerializer
-
-from rest_framework.authtoken.models import Token
-
-from rest_framework import viewsets, mixins
-
-from bson import ObjectId
-
-from rest_framework.pagination import PageNumberPagination
-
-class InvestigadorPagination(PageNumberPagination):
-    page_size = 20  # Tamaño de página por defecto
-    page_size_query_param = 'page_size'  # Permite cambiar el tamaño de página
-    max_page_size = 100  # Tamaño máximo de página
 
 class GrupoPagination(PageNumberPagination):
-    page_size = 20  # Tamaño de página por defecto
+    page_size = 1  # Tamaño de página por defecto
     page_size_query_param = 'page_size'  # Permite cambiar el tamaño de página
     max_page_size = 100  # Tamaño máximo de página
 
+class ProyectoPagination(PageNumberPagination):
+    page_size = 1  # Tamaño de página por defecto
+    page_size_query_param = 'page_size'  # Permite cambiar el tamaño de página
+    max_page_size = 100  # Tamaño máximo de página
 
+class InvestigadorPagination(PageNumberPagination):
+    page_size = 1  # Tamaño de página por defecto
+    page_size_query_param = 'page_size'  # Permite cambiar el tamaño de página
+    max_page_size = 100  # Tamaño máximo de página
 
 class InvestigadorViewSet(mixins.ListModelMixin,
                           mixins.RetrieveModelMixin,
@@ -57,7 +50,6 @@ class InvestigadorViewSet(mixins.ListModelMixin,
     pagination_class = InvestigadorPagination
     
     def get_permissions(self):
-        # Permisos diferentes para métodos GET y otros
         if self.request.method in ['GET']:
             return [AllowAny()]
         return [IsAuthenticated()]
@@ -65,8 +57,9 @@ class InvestigadorViewSet(mixins.ListModelMixin,
     def list(self, request):
         # Parámetro de búsqueda
         search_query = request.query_params.get('search', None)
-        # Parámetro de ordenación
-        ordering = request.query_params.get('ordering', None)
+        sort_field = request.query_params.get('sortField', None)
+        sort_order = request.query_params.get('sortOrder', 'asc')
+        email_query = request.query_params.get('email', None)
         
         # Query inicial
         query = {}
@@ -75,24 +68,25 @@ class InvestigadorViewSet(mixins.ListModelMixin,
         if search_query:
             query = {
                 "$or": [
-                    {"nombre": {"$regex": search_query, "$options": "i"}},  # Búsqueda por nombre
-                    {"apellido": {"$regex": search_query, "$options": "i"}},  # Búsqueda por apellido
-                    {"email": {"$regex": search_query, "$options": "i"}},  # Búsqueda por email
-                    {"grupos": {"$regex": search_query, "$options": "i"}},  # Búsqueda por grupos
-                    {"proyectos": {"$regex": search_query, "$options": "i"}},  # Búsqueda por proyectos
+                    {"nombre": {"$regex": search_query, "$options": "i"}},
+                    {"apellido": {"$regex": search_query, "$options": "i"}},
+                    {"email": {"$regex": search_query, "$options": "i"}},
+                    {"link": {"$regex": search_query, "$options": "i"}},
                 ]
             }
         
+
+        if email_query:
+            query['email'] = {"$regex": email_query, "$options": "i"}
+
+
         # Obtener investigadores desde la base de datos
         all_researchers = list(investigadores.find(query))
         
         # Ordenar los investigadores
-        if ordering:
-            if ordering.startswith('-'):
-                order_by = ordering[1:]
-                all_researchers = sorted(all_researchers, key=lambda x: x.get(order_by, ''), reverse=True)
-            else:
-                all_researchers = sorted(all_researchers, key=lambda x: x.get(ordering, ''))
+        if sort_field:
+            reverse_order = sort_order == 'desc'
+            all_researchers = sorted(all_researchers, key=lambda x: x.get(sort_field, '').lower() if x.get(sort_field) else '', reverse=reverse_order)
 
         # Añadir el campo "id" y eliminar "_id"
         for researcher in all_researchers:
@@ -103,7 +97,7 @@ class InvestigadorViewSet(mixins.ListModelMixin,
         page = self.paginate_queryset(all_researchers)
         if page is not None:
             return self.get_paginated_response(page)
-
+        
         return Response(all_researchers)
     
     def retrieve(self, request, pk=None):
@@ -115,9 +109,12 @@ class InvestigadorViewSet(mixins.ListModelMixin,
         return Response({"error": "Investigador no encontrado."}, status=404)
     
     def update(self, request, pk=None):
+
         if request.user.username != investigadores.find_one({"_id": ObjectId(pk)})["email"]:
+
             return Response({"error": "No puedes modificar un investigador que no eres tú."}, status=403)
         
+
         data = request.data
         investigadores.update_one({"_id": ObjectId(pk)}, {"$set": data})
 
@@ -132,12 +129,6 @@ class InvestigadorViewSet(mixins.ListModelMixin,
         projects = proyectos.find({"investigadores": ObjectId(pk)})
         projects = list(projects)
         return Response(projects)
-    
-    serializer_class = InvestigadorSerializer
-    queryset = investigadores.find()
-    
-
-
 
 class GrupoViewSet(mixins.ListModelMixin,
                           mixins.RetrieveModelMixin,
@@ -152,42 +143,50 @@ class GrupoViewSet(mixins.ListModelMixin,
         if self.request.method in ['GET']:
             return [AllowAny()]
         return [IsAuthenticated()]
-
+    
     def list(self, request):
+        # Capturar los parámetros de búsqueda y ordenamiento
         search_query = request.query_params.get('search', None)
-        ordering = request.query_params.get('ordering', None)
+        sort_field = request.query_params.get('sortField', None)
+        sort_order = request.query_params.get('sortOrder', 'asc')  # 'asc' por defecto
+
+        investigador_id = request.query_params.get('investigador', None)
+        
+
         query = {}
-        # buscar investigadores por nombre apellidos o email, tambien por nombre de proyecto y sus key_words
 
-
+        # Si hay un parámetro de búsqueda
         if search_query:
             query = {
                 "$or": [
                     {"nombre": {"$regex": search_query, "$options": "i"}},
                     {"descripcion": {"$regex": search_query, "$options": "i"}},
-                    {"investigadores": {"$regex": search_query, "$options": "i"}},
-                    {"proyectos": {"$regex": search_query, "$options": "i"}},
                 ]
             }
         
 
+
+
+        # Obtener grupos desde la base de datos
         all_groups = list(grupos.find(query))
 
-        if ordering:
-            if ordering.startswith('-'):
-                order_by = ordering[1:]
-                all_groups = sorted(all_groups, key=lambda x: x.get(order_by, ''), reverse=True)
-            else:
-                all_groups = sorted(all_groups, key=lambda x: x.get(ordering, ''))
+        if investigador_id:
+            all_groups = [group for group in all_groups if investigador_id in group["investigadores"]]
 
+        # Ordenar los grupos
+        if sort_field:
+            reverse_order = sort_order == 'desc'  # True si es 'desc', False si es 'asc'
+            all_groups.sort(key=lambda x: x.get(sort_field, '').lower(), reverse=reverse_order)
+
+        # Añadir el campo "id" y eliminar "_id"
         for group in all_groups:
-            group["id"] = str(group["_id"])
-            del group["_id"]
+            group["id"] = str(group.pop("_id"))  # Usar pop para eliminar y obtener al mismo tiempo
 
+        # Paginación
         page = self.paginate_queryset(all_groups)
         if page is not None:
             return self.get_paginated_response(page)
-        
+
         return Response(all_groups)
     
     def retrieve(self, request, pk=None):
@@ -195,10 +194,10 @@ class GrupoViewSet(mixins.ListModelMixin,
         if group:
             group["id"] = str(group["_id"])
             del group["_id"]
-            researchers = investigadores.find({"_id": {"$in": group["investigadores"]}})
+
+            
             projects = proyectos.find({"grupo": ObjectId(pk)})
             group["proyectos"] = list(projects)
-            group["investigadores"] = list(researchers)
             return Response(group)
         return Response({"error": "Grupo no encontrado."}, status=404)
     
@@ -258,51 +257,58 @@ class ProyectoViewSet(mixins.ListModelMixin,
         return [IsAuthenticated()]
 
     def list(self, request):
+        # Capturar los parámetros de búsqueda y ordenamiento
         search_query = request.query_params.get('search', None)
-        ordering = request.query_params.get('ordering', None)
+        sort_field = request.query_params.get('sortField', None)
+        sort_order = request.query_params.get('sortOrder', 'asc')  # 'asc' por defecto
+        
+        investigador_id = request.query_params.get('investigador', None)
+        grupo_id = request.query_params.get('grupo', None)
+
         query = {}
-        # buscar investigadores por nombre apellidos o email
+
+        # Si hay un parámetro de búsqueda
         if search_query:
             query = {
                 "$or": [
                     {"nombre": {"$regex": search_query, "$options": "i"}},
                     {"descripcion": {"$regex": search_query, "$options": "i"}},
-                    {"investigadores": {"$regex": search_query, "$options": "i"}},
-                    {"grupos": {"$regex": search_query, "$options": "i"}},
-                    {"key_words": {"$regex": search_query, "$options": "i"}},
+                    
                 ]
             }
-        
+
+        if investigador_id:
+            query['investigadores'] = ObjectId(investigador_id)
+
+        if grupo_id:
+            query['grupo'] = ObjectId(grupo_id)
+
+        # Obtener proyectos desde la base de datos
         all_projects = list(proyectos.find(query))
 
-        if ordering:
-            if ordering.startswith('-'):
-                order_by = ordering[1:]
-                all_projects = sorted(all_projects, key=lambda x: x.get(order_by, ''), reverse=True)
-            else:
-                all_projects = sorted(all_projects, key=lambda x: x.get(ordering, ''))
+        # Ordenar los proyectos
+        if sort_field:
+            reverse_order = sort_order == 'desc'
+            all_projects = sorted(all_projects, key=lambda x: x.get(sort_field, '').lower() if x.get(sort_field) else '', reverse=reverse_order)
 
+        # Añadir el campo "id" y eliminar "_id"
         for project in all_projects:
             project["id"] = str(project["_id"])
             del project["_id"]
 
+        # Paginación
         page = self.paginate_queryset(all_projects)
         if page is not None:
             return self.get_paginated_response(page)
         
         return Response(all_projects)
-
-
+    
 
     def retrieve(self, request, pk=None):
         project = proyectos.find_one({"_id": ObjectId(pk)})
         if project:
             project["id"] = str(project["_id"])
             del project["_id"]
-            researchers = investigadores.find({"_id": {"$in": project["investigadores"]}})
-            project["researchers"] = list(researchers)
-            groups = grupos.find({"_id": {"$in": project["grupos"]}})
-            project["groups"] = list(groups)
             return Response(project)
         return Response({"error": "Proyecto no encontrado."}, status=404)
     
@@ -341,7 +347,7 @@ class ProyectoViewSet(mixins.ListModelMixin,
     serializer_class = ProyectoSerializer
     queryset = proyectos.find()
 
-    
+        
 def send_email(email, password_generated):
     try:
         # send email
@@ -358,12 +364,6 @@ def send_email(email, password_generated):
     return True
 
 
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
-from bson import ObjectId
-from django.contrib.auth.models import User
-
-from django.utils.crypto import get_random_string
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -394,7 +394,6 @@ def signup(request):
     else:
         return Response({"error": "Invalid email."}, status=400)
 
-from rest_framework_simplejwt.tokens import RefreshToken
 
 @api_view(['POST'])
 @permission_classes([AllowAny])

@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
+import "./styles/Login.css"; // Asegúrate de crear este archivo para los estilos
+
+
 
 export function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    
+
     const handleLogin = async () => {
         try {
             const response = await fetch('http://localhost:8000/api/v1/signin/', {
@@ -36,22 +39,28 @@ export function Login() {
     };
 
     return (
-        <div>
+        <div className="login-container">
             <h2>Iniciar Sesión</h2>
-            <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-            />
-            <input
-                type="password"
-                placeholder="Contraseña"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-            />
-            <button onClick={handleLogin}>Login</button>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+            <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} className="login-form">
+                <input
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="input-field"
+                    required
+                />
+                <input
+                    type="password"
+                    placeholder="Contraseña"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="input-field"
+                    required
+                />
+                <button type="submit" className="submit-button">Iniciar Sesión</button>
+            </form>
+            {error && <p className="error-message">{error}</p>}
         </div>
     );
 }

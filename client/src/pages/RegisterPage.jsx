@@ -7,7 +7,6 @@ export function RegisterPage() {
     return (
         <div>
             <Navigation />
-            <h1>Registro</h1>
             <Register />
         </div>
     );
