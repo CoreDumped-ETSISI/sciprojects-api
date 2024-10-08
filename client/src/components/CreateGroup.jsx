@@ -1,19 +1,94 @@
 import React, { useState, useEffect } from "react";
-import { jwtDecode } from 'jwt-decode'; // import dependency
-import "./styles/CreateGroup.css"; // Asegúrate de crear este archivo para los estilos
+import { jwtDecode } from 'jwt-decode';
+import "./styles/CreateGroup.css"; 
 import { useParams } from "react-router-dom";
 
+const SelectWithSearch = ({ options, selectedOptions, setSelectedOptions, label }) => {
+    const [searchTerm, setSearchTerm] = useState("");
+    
+    const filteredOptions = options.filter(option => 
+        option.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const handleSelectChange = (e) => {
+        const selected = Array.from(e.target.selectedOptions).map(option => option.value);
+        const newSelectedOptions = [...new Set([...selectedOptions, ...selected])];
+        setSelectedOptions(newSelectedOptions);
+    };
+
+    return (
+        <div className="select-with-search">
+            <h2>{label}</h2>
+            <input
+                type="text"
+                placeholder="Buscar..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <select
+                multiple
+                value={selectedOptions}
+                onChange={handleSelectChange}
+            >
+                {filteredOptions.map(option => (
+                    <option key={option.id} value={option.id}>
+                        {option.nombre}
+                    </option>
+                ))}
+            </select>
+        </div>
+    );
+};
+
+const SelectedItems = ({ items, label }) => {
+    return (
+        <div className="selected-items">
+            <h3>{label}</h3>
+            {items.length === 0 ? (
+                <p>No hay seleccionados.</p>
+            ) : (
+                <ul>
+                    {items.map(item => (
+                        <li key={item.id}>{item.nombre}</li>
+                    ))}
+                </ul>
+            )}
+        </div>
+    );
+};
 
 export function CreateGroup() {
+    const { id } = useParams();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [researchers, setResearchers] = useState([]);
     const [selectedResearchers, setSelectedResearchers] = useState([]);
     const [link, setLink] = useState("");
-    const [moreInfo, setMoreInfo] = useState("");
+    const [pageInvestigador, setPageInvestigador] = useState(1);
 
-    const { id } = useParams();
+
+    useEffect(() => {
+        if (id) {
+            const fetchGroupData = async () => {
+                try {
+                    const response = await fetchWithAuth(`http://localhost:8000/api/v1/grupos/${id}/`);
+                    if (response.ok) {
+                        const groupData = await response.json();
+                        setName(groupData.nombre);
+                        setDescription(groupData.descripcion);
+                        setLink(groupData.link);
+                        setSelectedResearchers(groupData.investigadores); // Asumiendo que es un array de IDs
+                    } else {
+                        alert("Error al obtener los datos del grupo");
+                    }
+                } catch (err) {
+                    alert("Error al conectar con el servidor");
+                }
+            };
+            fetchGroupData();
+        }
+    }, [id]);
 
 
     const fetchWithAuth = async (url, options = {}) => {
@@ -61,6 +136,40 @@ export function CreateGroup() {
         fetchResearchers();
     }, []);
 
+
+    useEffect(() => {
+        fetchInvestigadores();
+    }, [pageInvestigador]);
+
+    const fetchInvestigadores = async () => {
+        let allResearchers = [];
+        let page = 1;
+    
+        while (true) {
+            try {
+                const response = await fetchWithAuth(`http://localhost:8000/api/v1/investigadores/?page=${page}`);
+                if (!response.ok) {
+                    throw new Error("Error al obtener los investigadores");
+                }
+                const data = await response.json();
+    
+                // Concatenar los investigadores de la página actual
+                allResearchers = [...allResearchers, ...data.results];
+    
+                // Si no hay más resultados, salir del bucle
+                if (!data.next) {
+                    break;
+                }
+                page++;
+            } catch (err) {
+                console.error("Error al conectar con el servidor:", err);
+                break;
+            }
+        }
+    
+        setResearchers(allResearchers);
+    };
+
     const isTokenValid = (token) => {
         if (!token) return false;
         try {
@@ -100,18 +209,27 @@ export function CreateGroup() {
     };
 
     const handleCreateGroup = async () => {
+
+        const grupoName = document.querySelector("input[placeholder='Nombre']").value;
+
+        if (!grupoName) {
+            alert("Por favor, completa el campo de nombre del grupo");
+            return;
+        }
+
+
         try {
             const response = await fetchWithAuth("http://localhost:8000/api/v1/grupos/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
                 },
                 body: JSON.stringify({
                     'nombre': name,
                     'descripcion': description,
                     'investigadores': selectedResearchers,
                     'link': link,
-                    'more_info': moreInfo,
                 }),
             });
 
@@ -119,6 +237,7 @@ export function CreateGroup() {
 
             if (response.ok) {
                 alert("Grupo creado");
+                // Redirigir o realizar otra acción después de crear el grupo
             } else {
                 alert(data.error || "Error al crear el grupo");
             }
@@ -129,24 +248,20 @@ export function CreateGroup() {
 
     const handleUpdateGroup = async () => {
         try {
-            
             const response = await fetchWithAuth(`http://localhost:8000/api/v1/grupos/${id}/`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
                 },
                 body: JSON.stringify({
                     'nombre': name,
                     'descripcion': description,
                     'investigadores': selectedResearchers,
                     'link': link,
-                    'more_info': moreInfo,
                 }),
             });
         
-            
-            const data = await response.json();
-
             if (response.ok) {
                 alert("Grupo modificado");
             } else {
@@ -155,24 +270,13 @@ export function CreateGroup() {
         } catch (err) {
             alert("Error al conectar con el servidor");
         }
-    }
-
-    const handleSelectResearcher = (researcher) => {
-        const researcherId = researcher.id;
-        if (selectedResearchers.includes(researcherId)) {
-            setSelectedResearchers(selectedResearchers.filter((id) => id !== researcherId));
-        } else {
-            setSelectedResearchers([...selectedResearchers, researcherId]);
-        }
     };
+
+    const selectedResearchersData = researchers.filter(researcher => selectedResearchers.includes(researcher.id));
 
     return (
         <div className="create-group-container">
-
             <h2>{id ? "Modificar grupo" : "Crear grupo"}</h2>
-
-
-    
             <input 
                 type="text" 
                 placeholder="Nombre" 
@@ -181,7 +285,6 @@ export function CreateGroup() {
                 className="input-field" 
                 required 
             />
-            
             <input 
                 type="text" 
                 placeholder="Descripción" 
@@ -190,25 +293,7 @@ export function CreateGroup() {
                 className="input-field" 
                 required 
             />
-    
-            <h3>Investigadores</h3>
-            <select 
-                multiple 
-                value={selectedResearchers} 
-                onChange={(e) => {
-                    const options = e.target.selectedOptions;
-                    const selected = Array.from(options).map(option => option.value);
-                    setSelectedResearchers(selected);
-                }} 
-                className="select-field"
-            >
-                {researchers.map((researcher) => (
-                    <option key={researcher.id} value={researcher.id}>
-                        {researcher.nombre} {researcher.apellido}
-                    </option>
-                ))}
-            </select>
-    
+
             <input 
                 type="text" 
                 placeholder="Enlace" 
@@ -216,22 +301,19 @@ export function CreateGroup() {
                 onChange={(e) => setLink(e.target.value)} 
                 className="input-field" 
             />
-            
-            <input 
-                type="text" 
-                placeholder="Más información" 
-                value={moreInfo} 
-                onChange={(e) => setMoreInfo(e.target.value)} 
-                className="input-field" 
+
+            <SelectWithSearch
+                options={researchers}
+                selectedOptions={selectedResearchers}
+                setSelectedOptions={setSelectedResearchers}
+                label="Seleccionar Investigadores"
             />
-    
-            
-            { id ? (
+            <SelectedItems items={selectedResearchersData} label="Investigadores Seleccionados" />            
+            {id ? (
                 <button onClick={handleUpdateGroup} className="submit-button">Modificar grupo</button>
             ) : (
                 <button onClick={handleCreateGroup} className="submit-button">Crear grupo</button>
             )}
-
         </div>
     );
-}    
+}

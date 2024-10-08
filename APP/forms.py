@@ -64,6 +64,7 @@ class ProyectoForm(forms.Form):
     descripcion = forms.CharField(label='Descripción', widget=forms.Textarea, required=False)
     link = forms.URLField(label='Link', max_length=200, required=False)
     keywords = forms.CharField(label='Keywords', max_length=200, required=False)
+    fecha = forms.DateField(label='Fecha', required=False)
 
     # Campos para las relaciones ManyToMany con investigadores y grupos
     investigadores = forms.MultipleChoiceField(label="Investigadores", required=False)
@@ -99,6 +100,7 @@ class ProyectoForm(forms.Form):
             "descripcion": self.cleaned_data['descripcion'],
             "link": self.cleaned_data['link'],
             "keywords": self.cleaned_data['keywords'],
+            "fecha": self.cleaned_data['fecha'],
             "investigadores": self.cleaned_data['investigadores'],
             "grupos": self.cleaned_data['grupos'],
         }

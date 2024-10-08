@@ -18,39 +18,16 @@ export function InvestigadorCard({ id }) {
         const res = await getInvestigadorById(id); // Obtener los datos del investigador
         setInvestigador(res.data);
         setLoading(false);
+        setGrupos(res.data.grupos);
+        setProyectos(res.data.proyectos);
       } catch (error) {
         console.error("Error fetching investigador:", error);
         setLoading(false);
+
       }
     }
     fetchInvestigador();
   }, [id]);
-
-  useEffect(() => {
-    async function fetchGrupos() {
-      if (investigador) {
-        const res = await getGrupos();
-        const gruposFiltrados = res.data.results.filter(grupo =>
-          grupo.investigadores.includes(investigador.id)
-        );
-        setGrupos(gruposFiltrados);
-      }
-    }
-    fetchGrupos();
-  }, [investigador]);
-
-  useEffect(() => {
-    async function fetchProyectos() {
-      if (investigador) {
-        const res = await getProyectos();
-        const proyectosFiltrados = res.data.results.filter(proyecto =>
-          proyecto.investigadores.includes(investigador.id)
-        );
-        setProyectos(proyectosFiltrados);
-      }
-    }
-    fetchProyectos();
-  }, [investigador]);
 
   if (loading) {
     return <p>Cargando...</p>;

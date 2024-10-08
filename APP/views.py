@@ -93,6 +93,7 @@ class InvestigadorViewSet(mixins.ListModelMixin,
             researcher["id"] = str(researcher["_id"])
             del researcher["_id"]
 
+
         # Paginación
         page = self.paginate_queryset(all_researchers)
         if page is not None:
@@ -105,6 +106,27 @@ class InvestigadorViewSet(mixins.ListModelMixin,
         if researcher:
             researcher["id"] = str(researcher["_id"])
             del researcher["_id"]
+
+            # Ver en que grupos esta el investigador
+            groups = grupos.find()
+            groups = [group for group in groups if pk in group["investigadores"]]
+
+            for group in groups:
+                group["id"] = str(group["_id"])
+                del group["_id"]
+
+            researcher["grupos"] = groups
+
+            # Ver en que proyectos esta el investigador
+            projects = proyectos.find()
+            projects = [project for project in projects if pk in project["investigadores"]]
+
+            for project in projects:
+                project["id"] = str(project["_id"])
+                del project["_id"]
+
+            researcher["proyectos"] = projects
+
             return Response(researcher)
         return Response({"error": "Investigador no encontrado."}, status=404)
     
@@ -152,7 +174,6 @@ class GrupoViewSet(mixins.ListModelMixin,
 
         investigador_id = request.query_params.get('investigador', None)
         
-
         query = {}
 
         # Si hay un parámetro de búsqueda
@@ -163,15 +184,9 @@ class GrupoViewSet(mixins.ListModelMixin,
                     {"descripcion": {"$regex": search_query, "$options": "i"}},
                 ]
             }
-        
-
-
 
         # Obtener grupos desde la base de datos
         all_groups = list(grupos.find(query))
-
-        if investigador_id:
-            all_groups = [group for group in all_groups if investigador_id in group["investigadores"]]
 
         # Ordenar los grupos
         if sort_field:
@@ -195,11 +210,19 @@ class GrupoViewSet(mixins.ListModelMixin,
             group["id"] = str(group["_id"])
             del group["_id"]
 
+            # Ver en que proyectos.grupos esta el grupo
+            projects = proyectos.find()
+            projects = [project for project in projects if pk in project["grupos"]]
             
-            projects = proyectos.find({"grupo": ObjectId(pk)})
-            group["proyectos"] = list(projects)
+            for project in projects:
+                project["id"] = str(project["_id"])
+                del project["_id"]
+            
+            group["proyectos"] = projects
+
             return Response(group)
         return Response({"error": "Grupo no encontrado."}, status=404)
+    
     
     def create(self, request):
         # Puede realizar esta acción si está autenticado
@@ -273,7 +296,8 @@ class ProyectoViewSet(mixins.ListModelMixin,
                 "$or": [
                     {"nombre": {"$regex": search_query, "$options": "i"}},
                     {"descripcion": {"$regex": search_query, "$options": "i"}},
-                    
+                    {"keywords": {"$regex": search_query, "$options": "i"}},
+                    {"fecha": {"$regex": search_query, "$options": "i"}},   
                 ]
             }
 

@@ -20,6 +20,7 @@ export function GrupoCard({ id }) {
                 const res = await getGrupoById(id);
                 if (res.data) {
                     setGrupo(res.data);
+                    setProyectos(res.data.proyectos);
                 }
             } catch (error) {
                 console.error("Error fetching grupo:", error);
@@ -31,41 +32,28 @@ export function GrupoCard({ id }) {
     }, [id]);
 
     useEffect(() => {
-        async function fetchInvestigadores() {
-            if (grupo && grupo.investigadores) {
-                try {
-                    const investigadoresPromises = grupo.investigadores.map(idInvestigador => getInvestigadorById(idInvestigador));
-                    const investigadoresData = await Promise.all(investigadoresPromises);
-                    setInvestigadores(investigadoresData.map(res => res.data)); // Extrae el data de cada respuesta
-                    checkUserPermission(investigadoresData);
-                } catch (error) {
-                    console.error("Error fetching investigadores:", error);
-                }
+        const fetchInvestigadores = async () => {
+            if (grupo && grupo.investigadores && grupo.investigadores.length > 0) {
+                const investigadoresPromises = grupo.investigadores.map(async (idInvestigador) => {
+                    const res = await getInvestigadorById(idInvestigador);
+                    return res.data;
+                });
+                const investigadoresData = await Promise.all(investigadoresPromises);
+                setInvestigadores(investigadoresData);
+                checkUserPermission(investigadoresData);
             }
-        }
-        fetchInvestigadores();
-    }, [grupo]);
 
-    useEffect(() => {
-        async function fetchProyectos() {
-            if (grupo) {
-                try {
-                    const res = await getProyectos({grupo_id: grupo.id});
-                    const proyectosFiltrados = res.data.results.filter(proyecto =>
-                        proyecto.grupos && proyecto.grupos.includes(grupo.id)
-                    );
-                    setProyectos(proyectosFiltrados);
-                } catch (error) {
-                    console.error("Error fetching proyectos:", error);
-                }
-            }
-        }
-        fetchProyectos();
-    }, [grupo]);
+        };
+    
+        fetchInvestigadores();
+    }, [grupo]); // Dependencia del efecto: se ejecutará cada vez que 'grupo' cambie
+    
 
     const checkUserPermission = (associatedResearchers) => {
         const currentUserId = localStorage.getItem('user');
+        console.log(currentUserId, associatedResearchers);
         const isUserInGroup = associatedResearchers.some(researcher => researcher.email === currentUserId);
+        console.log(isUserInGroup);
         setCanModify(isUserInGroup);
     };
 
@@ -84,7 +72,7 @@ export function GrupoCard({ id }) {
                 <p>{grupo.descripcion}</p>
                 {canModify && <button onClick={handleModifyClick} className="modify-button">Modificar</button>}
             </div>
-            
+
             <div className="grupo-body">
                 <div className="tarjeta-lista">
                     <h3>Investigadores:</h3>

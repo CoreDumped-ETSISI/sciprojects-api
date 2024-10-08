@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./styles/MyProfile.css";
+import { getInvestigadorById } from "../api/investigadores.api";
 
 export function MyProfile() {
     const [user, setUser] = useState(null);
@@ -29,14 +30,25 @@ export function MyProfile() {
             });
 
             const data = await response.json();
-            console.log(data); // Verifica la respuesta
 
             if (response.ok) {
                 const investigadorEncontrado = data.results.find(investigador => investigador.email === email);
                 if (investigadorEncontrado) {
-                    setInvestigador(investigadorEncontrado);
-                    fetchGrupos(investigadorEncontrado.id);
-                    fetchProyectos(investigadorEncontrado.id);
+
+                    const investigadorId = investigadorEncontrado.id;
+
+                    try {
+                        const researcher = await getInvestigadorById(investigadorId);
+                        if (researcher.data) {
+                            setInvestigador(researcher.data);
+                            setGrupos(researcher.data.grupos);
+                            setProyectos(researcher.data.proyectos);
+                        }
+                    } catch (error) {
+                        console.error("Error fetching investigador:", error);
+                        
+                    }
+
                 } else {
                     setError('Investigador no encontrado');
                 }
@@ -46,46 +58,13 @@ export function MyProfile() {
                 window.location.href = '/signin';
             }
         } catch (err) {
+            console.log(err);
             setError('Error al conectar con el servidor');
         }
     };
 
 
-    const fetchGrupos = async (investigadorId) => {
-        try {
-            const response = await fetch(`http://localhost:8000/api/v1/grupos?investigador=${investigadorId}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-                },
-            });
-            const data = await response.json();
-            if (response.ok) {
-                setGrupos(data.results);
-            } else {
-                setError(data.error || 'Error al cargar grupos');
-            }
-        } catch (err) {
-            setError('Error al conectar con el servidor');
-        }
-    };
 
-    const fetchProyectos = async (investigadorId) => {
-        try {
-            const response = await fetch(`http://localhost:8000/api/v1/proyectos?investigador=${investigadorId}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-                },
-            });
-            const data = await response.json();
-            if (response.ok) {
-                setProyectos(data.results);
-            } else {
-                setError(data.error || 'Error al cargar proyectos');
-            }
-        } catch (err) {
-            setError('Error al conectar con el servidor');
-        }
-    };
 
     const handleUpdateProfile = async (e) => {
         e.preventDefault();

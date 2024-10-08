@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { getGrupoById } from '../api/grupos.api';
 import { getInvestigadorById } from '../api/investigadores.api';
-import './ProyectoCard.css'; // Asegúrate de crear este archivo para los estilos
-import { Link, useParams } from 'react-router-dom';
+import './styles/ProyectoCard.css'; // Asegúrate de crear este archivo para los estilos
+import { Link, Navigate, useParams } from 'react-router-dom';
 import { getProyectoById } from '../api/proyectos.api';
 
 export function ProyectoCard({ id }) {
@@ -63,7 +63,7 @@ export function ProyectoCard({ id }) {
 
     const handleModifyClick = () => {
         // Lógica para manejar el clic en modificar
-        console.log("Modificar proyecto");
+        Navigate(`/modify-project/${proyecto.id}`);
     };
 
     return (

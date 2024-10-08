@@ -1,229 +1,285 @@
 import React, { useEffect, useState } from "react";
-import { jwtDecode } from 'jwt-decode'; // import dependency
+import { jwtDecode } from 'jwt-decode';
 import { useParams } from "react-router-dom";
-import "./styles/CreateProject.css"; // Asegúrate de crear este archivo para los estilos
+import "./styles/CreateProject.css";
 import { getGrupos } from "../api/grupos.api";
 import { getInvestigadores } from "../api/investigadores.api";
 
+const SelectWithSearch = ({ options, selectedOptions, setSelectedOptions, label }) => {
+    const [searchTerm, setSearchTerm] = useState("");
+    
+    const filteredOptions = options.filter(option => 
+        option.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const handleSelectChange = (e) => {
+        const selected = Array.from(e.target.selectedOptions).map(option => option.value);
+        
+        // Crear un nuevo array combinando las selecciones anteriores y las nuevas
+        const newSelectedOptions = [...new Set([...selectedOptions, ...selected])];
+        setSelectedOptions(newSelectedOptions);
+    };
+
+    return (
+        <div className="select-with-search">
+            <h2>{label}</h2>
+            <input
+                type="text"
+                placeholder="Buscar..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <select
+                multiple
+                value={selectedOptions}
+                onChange={handleSelectChange}
+            >
+                {filteredOptions.map(option => (
+                    <option key={option.id} value={option.id}>
+                        {option.nombre}
+                    </option>
+                ))}
+            </select>
+        </div>
+    );
+};
+
+
+
+const SelectedItems = ({ items, label }) => {
+    return (
+        <div className="selected-items">
+            <h3>{label}</h3>
+            {items.length === 0 ? (
+                <p>No hay seleccionados.</p>
+            ) : (
+                <ul>
+                    {items.map(item => (
+                        <li key={item.id}>{item.nombre}</li>
+                    ))}
+                </ul>
+            )}
+        </div>
+    );
+};
+
+
 export function CreateProject() {
+    const { id } = useParams();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [projectName, setProjectName] = useState("");
-    const [projectDescription, setProjectDescription] = useState("");
-    const [projectStartDate, setProjectStartDate] = useState("");
-    const [projectEndDate, setProjectEndDate] = useState("");
-    const [projectStatus, setProjectStatus] = useState("");
+
     const [grupos, setGrupos] = useState([]);
-    const [researchers, setResearchers] = useState([]); 
-    const [selectedResearchers, setSelectedResearchers] = useState([]);
+    const [investigadores, setInvestigadores] = useState([]);
     const [selectedGroups, setSelectedGroups] = useState([]);
-    const [projectKeywords, setProjectKeywords] = useState(""); 
-    const [projectMoreInfo, setProjectMoreInfo] = useState("");
+    const [selectedResearchers, setSelectedResearchers] = useState([]);
+    const [searchTermGrupo, setSearchTermGrupo] = useState("");
+    const [searchTermInvestigador, setSearchTermInvestigador] = useState("");
+    const [projectLink, setProjectLink] = useState("");
+    const [projectDate, setProjectDate] = useState("");
+    const [pageGrupo, setPageGrupo] = useState(1);
+    const [pageInvestigador, setPageInvestigador] = useState(1);
+    const [pageSize] = useState(10);
 
-    const { id } = useParams(); // Recuperar el ID de la URL
 
-    useEffect(() => {
-        if (id) {
-            // Si hay un id, es un proyecto existente: cargamos la información
-            fetchProjectData();
-        }
-    }, [id]);
-
-    const fetchProjectData = async () => {
+    const isTokenValid = (token) => {
+        if (!token) return false;
         try {
-            const response = await fetchWithAuth(`http://localhost:8000/api/v1/proyectos/${id}/`);
-            const data = await response.json();
-            
-            if (response.ok) {
-                // Seteamos los datos del proyecto en los estados
-                setProjectName(data.nombre);
-                setProjectDescription(data.descripcion);
-                setProjectStartDate(data.fecha_inicio);
-                setProjectEndDate(data.fecha_fin);
-                setSelectedGroups(data.grupos);
-                setSelectedResearchers(data.investigadores);
-                setProjectKeywords(data.keyword);
-                setProjectMoreInfo(data.more_info);
-            } else {
-                console.error("Error al obtener el proyecto", data);
-            }
-        } catch (err) {
-            console.error("Error al conectar con el servidor:", err);
+            const decodedToken = jwtDecode(token);
+            const currentTime = Date.now() / 1000;
+            return decodedToken.exp > currentTime;
+        } catch (e) {
+            return false;
         }
     };
 
-    const handleCreateOrUpdateProject = async () => {
-        const method = id ? "PUT" : "POST";
-        const url = id ? `http://localhost:8000/api/v1/proyectos/${id}/` : "http://localhost:8000/api/v1/proyectos/";
-        
+
+    const refreshToken = async () => {
+        const refresh = localStorage.getItem('refresh_token');
+        if (refresh) {
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/token/refresh/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ refresh }),
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    localStorage.setItem('access_token', data.access);
+                    return data.access;
+                } else {
+                    console.log('Error al refrescar el token');
+                    return null;
+                }
+            } catch (err) {
+                console.log('Error en la conexión:', err);
+                return null;
+            }
+        }
+    };    
+    const fetchWithAuth = async (url, options = {}) => {
+        let token = localStorage.getItem('access_token');
+
+        if (!isTokenValid(token)) {
+            token = await refreshToken();
+            if (!token) {
+                return;
+            }
+        }
+
+        options.headers = {
+            ...options.headers,
+            "Authorization": `Bearer ${token}`,
+        };
+
+        return fetch(url, options);
+    };
+
+    useEffect(() => {
+        const token = localStorage.getItem("access_token");
+        if (token && isTokenValid(token)) {
+            setIsAuthenticated(true);
+        } else {
+            alert("Tu sesión ha expirado. Por favor, inicia sesión de nuevo.");
+            window.location.href = "/signin";
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchGrupos();
+        fetchInvestigadores();
+    }, [pageGrupo, pageInvestigador]);
+
+    const fetchGrupos = async () => {
         try {
-            const response = await fetch(url, {
-                method: method,
+            const response = await getGrupos(pageGrupo, pageSize);
+            setGrupos(response.data.results);
+        } catch (error) {
+            console.error("Error fetching grupos:", error);
+        }
+    };
+
+
+
+    const fetchInvestigadores = async () => {
+        let allResearchers = [];
+        let page = 1;
+    
+        while (true) {
+            try {
+                const response = await fetchWithAuth(`http://localhost:8000/api/v1/investigadores/?page=${page}`);
+                if (!response.ok) {
+                    throw new Error("Error al obtener los investigadores");
+                }
+                const data = await response.json();
+    
+                // Concatenar los investigadores de la página actual
+                allResearchers = [...allResearchers, ...data.results];
+    
+                // Si no hay más resultados, salir del bucle
+                if (!data.next) {
+                    break;
+                }
+                page++;
+            } catch (err) {
+                console.error("Error al conectar con el servidor:", err);
+                break;
+            }
+        }
+    
+        setResearchers(allResearchers);
+    };
+
+    const handleSearchGrupo = (e) => {
+        setSearchTermGrupo(e.target.value);
+    };
+
+    const handleSearchInvestigador = (e) => {
+        setSearchTermInvestigador(e.target.value);
+    };
+
+
+    const handleCreateProject = async () => {
+        const projectName = document.querySelector("input[placeholder='Nombre']").value;
+    
+        if (!projectName) {
+            alert("Por favor, completa el nombre del proyecto");
+            return;
+        }
+    
+        try {
+            const response = await fetchWithAuth("http://localhost:8000/api/v1/proyectos/", {
+                method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
                 },
-                body: JSON.stringify({ 
-                    'nombre': projectName,
-                    'descripcion': projectDescription,
-                    'grupos': selectedGroups,
-                    'fecha_inicio': projectStartDate,
-                    'fecha_fin': projectEndDate,
-                    'keyword': projectKeywords,
-                    'more_info': projectMoreInfo,
-                    'investigadores': selectedResearchers
+                body: JSON.stringify({
+                    nombre: projectName,
+                    descripcion: projectDescription,
+                    link: projectLink,
+                    fecha: projectDate,
+                    grupos: selectedGroups,
+                    investigadores: selectedResearchers,
                 }),
             });
-
-            const data = await response.json();
-
+    
             if (response.ok) {
-                alert(id ? "Proyecto modificado" : "Proyecto creado");
+                alert("Proyecto creado con éxito");
+                // Puedes redirigir o hacer otra acción después de crear el proyecto
             } else {
-                alert(data.error || `Error al ${id ? "modificar" : "crear"} el proyecto`);
+                const data = await response.json();
+                alert(data.error || "Error al crear el proyecto");
             }
         } catch (err) {
+            console.error("Error al crear el proyecto:", err);
             alert("Error al conectar con el servidor");
         }
     };
 
 
-    useEffect(() => {
-        const access_token = localStorage.getItem("access_token");
-        if (access_token) {
-            const decoded = jwtDecode(access_token);
-            if (decoded) {
-                setIsAuthenticated(true);
-            }
-        }
-    
-    }, []);
+    // Filtrar grupos e investigadores seleccionados
+    const selectedGruposData = grupos.filter(grupo => selectedGroups.includes(grupo.id));
+    const selectedInvestigadoresData = investigadores.filter(investigador => selectedResearchers.includes(investigador.id));
 
-    useEffect(() => {
-        const fetchGroups = async () => {
-            try {
-                const response = await getGrupos();
-                const data = await response.json();
-                if (response.ok) {
-                    setGrupos(data.results);
-                } else {
-                    console.error("Error al cargar grupos", data);
-                }
-            } catch (err) {
-                console.error("Error al conectar con el servidor", err);
-            }
-        };
 
-        const fetchResearchers = async () => {
-            try {
-                const response = await getInvestigadores();
-                const data = await response.json();
-                if (response.ok) {
-                    console.log(data.results, "data.results");
-                    setResearchers(data.results);
-                } else {
-                    console.error("Error al cargar investigadores", data);
-                }
-            } catch (err) {
-                console.error("Error al conectar con el servidor", err);
-            }
-        }
-    }, []);
-
-    if (!isAuthenticated) {
-        return (
-            <div>
-                <h1>Debes iniciar sesión para acceder a esta página</h1>
-            </div>
-        );
-    }
-
+    const title = id ? "Editar Proyecto" : "Crear Proyecto";
 
     return (
+        
+        
         <div className="create-project-container">
-            <h1>{id ? "Modificar Proyecto" : "Crear Proyecto"}</h1>
-            <input 
-                type="text" 
-                placeholder="Nombre del proyecto" 
-                value={projectName} 
-                onChange={(e) => setProjectName(e.target.value)} 
+            <h2>{title}</h2>
+            <input type="text" placeholder="Nombre" className="input-field" required />
+            <input type="text" placeholder="Descripción" className="input-field" required />
+            <input type="text" placeholder="Link" className="input-field" />
+            <input type='date' placeholder="Fecha" className="input-field" />
+            <SelectWithSearch
+                options={grupos}
+                selectedOptions={selectedGroups}
+                setSelectedOptions={setSelectedGroups}
+                label="Seleccionar Grupos"
             />
-            <input 
-                type="text" 
-                placeholder="Descripción del proyecto" 
-                value={projectDescription} 
-                onChange={(e) => setProjectDescription(e.target.value)} 
+            <SelectWithSearch
+                options={investigadores}
+                selectedOptions={selectedResearchers}
+                setSelectedOptions={setSelectedResearchers}
+                label="Seleccionar Investigadores"
             />
-            <input 
-                type="date" 
-                placeholder="Fecha de inicio" 
-                value={projectStartDate} 
-                onChange={(e) => setProjectStartDate(e.target.value)} 
-            />
-            <input 
-                type="date" 
-                placeholder="Fecha de fin" 
-                value={projectEndDate} 
-                onChange={(e) => setProjectEndDate(e.target.value)} 
-            />
-            <input 
-                type="text" 
-                placeholder="Estado del proyecto" 
-                value={projectStatus} 
-                onChange={(e) => setProjectStatus(e.target.value)} 
-            />
-            <input 
-                type="text" 
-                placeholder="Palabras clave" 
-                value={projectKeywords} 
-                onChange={(e) => setProjectKeywords(e.target.value)} 
-            />
-            <input 
-                type="text" 
-                placeholder="Más información" 
-                value={projectMoreInfo} 
-                onChange={(e) => setProjectMoreInfo(e.target.value)} 
-            />
+            
+            {/* Mostrar grupos seleccionados */}
+            <SelectedItems items={selectedGruposData} label="Grupos Seleccionados" />
+            
+            {/* Mostrar investigadores seleccionados */}
+            <SelectedItems items={selectedInvestigadoresData} label="Investigadores Seleccionados" />
 
-            {/* Grupos */}
-            <h2>Grupos</h2>
-            <select
-                multiple
-                value={selectedGroups}
-                onChange={(e) => {
-                    const options = e.target.selectedOptions;
-                    const selected = Array.from(options).map(option => option.value);
-                    setSelectedGroups(selected);
-                }}
-            >
-                {grupos.map((grupo) => (
-                    <option key={grupo.id} value={grupo.id}>
-                        {grupo.nombre}
-                    </option>
-                ))}
-            </select>
-
-            <h2>Investigadores</h2>
-            <select
-                multiple
-                value={selectedResearchers}
-                onChange={(e) => {
-                    const options = e.target.selectedOptions;
-                    const selected = Array.from(options).map(option => option.value);
-                    setSelectedResearchers(selected);
-                }}
-            >
-                {researchers.map((researcher) => (
-                    <option key={researcher.id} value={researcher.id}>
-                        {researcher.nombre} {researcher.apellido}
-                    </option>
-                ))}
-            </select>
-
-            <button onClick={handleCreateOrUpdateProject}>
-                {id ? "Modificar Proyecto" : "Crear Proyecto"}
-            </button>
-
+            <button onClick={handleCreateProject}>{title}</button>
         </div>
-    );
 
+
+
+
+    );
 }
