@@ -1,9 +1,14 @@
 # sciprojects-api
 
-Crea un archivo .env para guardar variables de entorno
-UPM_EMAIL_ADDRESS=tu_correo@upm.es
-UPM_EMAIL_PASSWORD=tu_contraseña
+## Configuración
 
+### 1. Crear el archivo `.env`
+
+Crea un archivo llamado `.env` en la raíz del proyecto para guardar las variables de entorno necesarias. A continuación, añade las siguientes líneas:
+  UPM_EMAIL_ADDRESS=tu_correo@upm.es
+  UPM_EMAIL_PASSWORD=tu_contraseña
+
+Comando para instalar las dependencias (hace falta una limpieza)
 pip install -r requirements.txt
 
 
@@ -14,5 +19,13 @@ python3 manage.py runserver
 
 ### Frontend
 cd client
+
 npm install
+
 npm run dev
+
+
+default frontend: http://localhost:5173/
+default backend: http://localhost:8000/api/v1/
+
+mongodb database name: WEB_INVESTIGACION on the port 27017
