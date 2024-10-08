@@ -1,0 +1,56 @@
+.investigador-card {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #f9f9f9;
+    max-width: 800px;
+    margin: auto;
+}
+
+.investigador-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.investigador-nombre {
+    font-size: 1.75rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.investigador-email {
+    font-size: 1rem;
+    color: #555;
+}
+
+.investigador-body {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.tarjeta-lista {
+    flex: 1;
+    min-width: 300px;
+}
+
+.tarjeta {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.grupo-enlace, .proyecto-enlace {
+    text-decoration: none;
+    color: #007bff;
+}
+
+.grupo-enlace:hover, .proyecto-enlace:hover {
+    color: #0056b3;
+}
