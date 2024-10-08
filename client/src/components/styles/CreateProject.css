@@ -38,3 +38,13 @@ button {
 button:hover {
     background-color: #0056b3;
 }
+
+
+.remove-icon {
+    color: red; /* Cambia el color como desees */
+    cursor: pointer;
+}
+
+.remove-icon:hover {
+    color: darkred; /* Cambia el color en hover */
+}

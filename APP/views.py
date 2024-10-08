@@ -296,7 +296,7 @@ class ProyectoViewSet(mixins.ListModelMixin,
                 "$or": [
                     {"nombre": {"$regex": search_query, "$options": "i"}},
                     {"descripcion": {"$regex": search_query, "$options": "i"}},
-                    {"keywords": {"$regex": search_query, "$options": "i"}},
+                    {"keyword": {"$regex": search_query, "$options": "i"}},
                     {"fecha": {"$regex": search_query, "$options": "i"}},   
                 ]
             }
@@ -313,6 +313,7 @@ class ProyectoViewSet(mixins.ListModelMixin,
         # Ordenar los proyectos
         if sort_field:
             reverse_order = sort_order == 'desc'
+            # si es por fecha, ordenar por fecha
             all_projects = sorted(all_projects, key=lambda x: x.get(sort_field, '').lower() if x.get(sort_field) else '', reverse=reverse_order)
 
         # Añadir el campo "id" y eliminar "_id"

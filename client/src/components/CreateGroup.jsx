@@ -2,13 +2,13 @@ import React, { useState, useEffect } from "react";
 import { jwtDecode } from 'jwt-decode';
 import "./styles/CreateGroup.css"; 
 import { useParams } from "react-router-dom";
-
 const SelectWithSearch = ({ options, selectedOptions, setSelectedOptions, label }) => {
     const [searchTerm, setSearchTerm] = useState("");
-    
-    const filteredOptions = options.filter(option => 
-        option.nombre.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+
+    const filteredOptions = options.filter(option => {
+        const regex = new RegExp(searchTerm, 'i'); // 'i' para hacer la búsqueda insensible a mayúsculas
+        return `${option.nombre} ${option.apellido} ${option.email}`.match(regex);
+    });
 
     const handleSelectChange = (e) => {
         const selected = Array.from(e.target.selectedOptions).map(option => option.value);
@@ -21,7 +21,7 @@ const SelectWithSearch = ({ options, selectedOptions, setSelectedOptions, label 
             <h2>{label}</h2>
             <input
                 type="text"
-                placeholder="Buscar..."
+                placeholder="Buscar por nombre, apellido o correo..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -32,7 +32,7 @@ const SelectWithSearch = ({ options, selectedOptions, setSelectedOptions, label 
             >
                 {filteredOptions.map(option => (
                     <option key={option.id} value={option.id}>
-                        {option.nombre}
+                        {option.nombre} {option.apellido} : {option.email}
                     </option>
                 ))}
             </select>
@@ -40,7 +40,15 @@ const SelectWithSearch = ({ options, selectedOptions, setSelectedOptions, label 
     );
 };
 
-const SelectedItems = ({ items, label }) => {
+
+
+
+const SelectedItems = ({ items, label, setSelectedOptions, selectedOptions }) => {
+    const handleRemove = (id) => {
+        const newSelectedOptions = selectedOptions.filter(itemId => itemId !== id);
+        setSelectedOptions(newSelectedOptions);
+    };
+
     return (
         <div className="selected-items">
             <h3>{label}</h3>
@@ -49,7 +57,16 @@ const SelectedItems = ({ items, label }) => {
             ) : (
                 <ul>
                     {items.map(item => (
-                        <li key={item.id}>{item.nombre}</li>
+                        <li key={item.id}>
+                            {`${item.nombre} ${item.apellido}: ${item.email}`} 
+                            <span 
+                                className="remove-icon" 
+                                onClick={() => handleRemove(item.id)}
+                                style={{ cursor: 'pointer', marginLeft: '10px', color: 'red' }}
+                            >
+                                X
+                            </span>
+                        </li>
                     ))}
                 </ul>
             )}
@@ -308,7 +325,13 @@ export function CreateGroup() {
                 setSelectedOptions={setSelectedResearchers}
                 label="Seleccionar Investigadores"
             />
-            <SelectedItems items={selectedResearchersData} label="Investigadores Seleccionados" />            
+            <SelectedItems 
+                items={selectedResearchersData} 
+                label="Investigadores Seleccionados" 
+                selectedOptions={selectedResearchers} // Agregar esta línea
+                setSelectedOptions={setSelectedResearchers} // Agregar esta línea
+            />
+
             {id ? (
                 <button onClick={handleUpdateGroup} className="submit-button">Modificar grupo</button>
             ) : (

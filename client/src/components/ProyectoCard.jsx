@@ -4,13 +4,22 @@ import { getInvestigadorById } from '../api/investigadores.api';
 import './styles/ProyectoCard.css'; // Asegúrate de crear este archivo para los estilos
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { getProyectoById } from '../api/proyectos.api';
+import { useNavigate } from 'react-router-dom';
 
 export function ProyectoCard({ id }) {
     const [grupos, setGrupos] = useState([]);
     const [investigadores, setInvestigadores] = useState([]);
     const [proyecto, setProyecto] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [canModify, setCanModify] = useState(false); // Para controlar si se puede modificar
+    const [canModify, setCanModify] = useState(false);
+    const [redirect, setRedirect] = useState(false); // Estado para redirección
+
+    
+    const navigate = useNavigate();
+
+    const handleKeywordClick = (keyword) => {
+        navigate(`/proyectos?keyword=${keyword}`);
+    };
 
     useEffect(() => {
         async function fetchProyecto() {
@@ -49,27 +58,31 @@ export function ProyectoCard({ id }) {
                 });
                 const investigadoresData = await Promise.all(investigadoresPromises);
                 setInvestigadores(investigadoresData);
-                checkUserPermission(investigadoresData); // Verifica permisos después de obtener investigadores
+                checkUserPermission(investigadoresData);
             }
         }
         fetchInvestigadores();
     }, [proyecto]);
 
     const checkUserPermission = (associatedResearchers) => {
-        const currentUserId = localStorage.getItem('user'); // Obtener el id del usuario actual
+        const currentUserId = localStorage.getItem('user'); 
         const isUserInGroup = associatedResearchers.some((researcher) => researcher.email === currentUserId);
         setCanModify(isUserInGroup);
     };
 
     const handleModifyClick = () => {
-        // Lógica para manejar el clic en modificar
-        Navigate(`/modify-project/${proyecto.id}`);
+        setRedirect(true); // Cambiar el estado para redirigir
     };
+
+    // Redirigir si se necesita
+    if (redirect) {
+        return <Navigate to={`/modify-project/${proyecto.id}`} />;
+    }
 
     return (
         <div className="proyecto-card">
-            {loading ? ( // Agrega loading aquí para que sea más limpio
-                <div>Loading...</div> // Mensaje de carga si no hay proyecto
+            {loading ? (
+                <div>Loading...</div>
             ) : (
                 proyecto ? (
                     <>
@@ -78,7 +91,24 @@ export function ProyectoCard({ id }) {
                                 <Link to={`/proyectos/${proyecto.id}`} className="proyecto-enlace">{proyecto.nombre}</Link>
                             </h3>
                             <p>{proyecto.descripcion}</p>
-                            {canModify && <button onClick={handleModifyClick} className="modify-button">Modificar</button>} {/* Botón de modificar */}
+                            {proyecto.fecha && <p>{proyecto.fecha}</p>}
+
+                            {proyecto.keyword && (
+                                <p>
+                                    {proyecto.keyword.split(',').map((kw, index) => (
+                                        <span
+                                            key={index}
+                                            onClick={() => handleKeywordClick(kw.trim())} // Elimina espacios en blanco
+                                            style={{ cursor: 'pointer', textDecoration: 'underline', color: 'blue' }} // Estilo inline, puedes moverlo a tu CSS
+                                        >
+                                            {kw.trim()} {/* Asegúrate de eliminar espacios en blanco */}
+                                        </span>
+                                    ))}
+                                </p>
+                            )}
+
+
+                            {canModify && <button onClick={handleModifyClick} className="modify-button">Modificar</button>}
                         </div>
 
                         <div className="proyecto-body">

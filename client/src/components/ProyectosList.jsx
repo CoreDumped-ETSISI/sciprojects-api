@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getProyectos } from '../api/proyectos.api';
 import { ProyectoCard } from './ProyectoCard';
+import { useSearchParams } from 'react-router-dom';
 
 export function ProyectosList() {
     const [proyectos, setProyectos] = useState([]);
@@ -10,6 +11,18 @@ export function ProyectosList() {
     const [sortField, setSortField] = useState('');
     const [sortOrder, setSortOrder] = useState('asc');
     const [error, setError] = useState('');
+
+    const [searchParams] = useSearchParams();
+
+    const keyword = searchParams.get('keyword');
+    useEffect(() => {
+        if (keyword) {
+            setSearchQuery(keyword);
+        }
+    }, [keyword]);
+    
+
+
     
     // Estado para el tamaño de la página
     const [pageSize, setPageSize] = useState(10); // Valor por defecto
@@ -34,6 +47,7 @@ export function ProyectosList() {
     };
 
     const handleSortChange = (field) => {
+
         if (sortField === field) {
             setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
         } else {
@@ -54,6 +68,12 @@ export function ProyectosList() {
         setCurrentPage(1); // Resetear a la primera página al cambiar el tamaño
     };
 
+    // Función para manejar clic en una palabra clave
+    const handleKeywordClick = (keyword) => {
+        setSearchQuery(keyword); // Actualiza el campo de búsqueda
+        setCurrentPage(1); // Reinicia la paginación a la primera página
+    };
+
     return (
         <div>
             {error && <p>{error}</p>}
@@ -70,6 +90,7 @@ export function ProyectosList() {
             <div>
                 <button onClick={() => handleSortChange('nombre')}>Ordenar por Nombre</button>
                 <button onClick={() => handleSortChange('descripcion')}>Ordenar por Descripción</button>
+                <button onClick={() => handleSortChange('fecha')}>Ordenar por Fecha</button>
             </div>
 
             <div>
@@ -84,7 +105,7 @@ export function ProyectosList() {
 
             <div>
                 {proyectos.map((proyecto) => (
-                    <ProyectoCard key={proyecto.id} id={proyecto.id} />
+                    <ProyectoCard key={proyecto.id} id={proyecto.id}/>
                 ))}
             </div>
 

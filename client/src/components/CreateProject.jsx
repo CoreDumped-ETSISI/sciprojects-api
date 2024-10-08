@@ -44,9 +44,55 @@ const SelectWithSearch = ({ options, selectedOptions, setSelectedOptions, label 
     );
 };
 
+const SelectWithSearchInvestigador = ({ options, selectedOptions, setSelectedOptions, label }) => {
+    const [searchTerm, setSearchTerm] = useState("");
+
+    console.log(options);
+    const filteredOptions = options.filter(option => {
+        const regex = new RegExp(searchTerm, 'i'); // 'i' para hacer la búsqueda insensible a mayúsculas
+        return `${option.nombre} ${option.apellido} ${option.email}`.match(regex);
+    });
+
+    const handleSelectChange = (e) => {
+        const selected = Array.from(e.target.selectedOptions).map(option => option.value);
+        const newSelectedOptions = [...new Set([...selectedOptions, ...selected])];
+        setSelectedOptions(newSelectedOptions);
+    };
+
+    return (
+        <div className="select-with-search">
+            <h2>{label}</h2>
+            <input
+                type="text"
+                placeholder="Buscar por nombre, apellido o correo..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <select
+                multiple
+                value={selectedOptions}
+                onChange={handleSelectChange}
+            >
+                {filteredOptions.map(option => (
+                    <option key={option.id} value={option.id}>
+                        {option.nombre} {option.apellido} : {option.email}
+                    </option>
+                ))}
+            </select>
+        </div>
+    );
+};
 
 
-const SelectedItems = ({ items, label }) => {
+
+
+
+const SelectedItems = ({ items, label, setSelectedOptions, selectedOptions }) => {
+    const handleRemove = (id) => {
+        const newSelectedOptions = selectedOptions.filter(itemId => itemId !== id);
+        setSelectedOptions(newSelectedOptions);
+    };
+
     return (
         <div className="selected-items">
             <h3>{label}</h3>
@@ -55,7 +101,47 @@ const SelectedItems = ({ items, label }) => {
             ) : (
                 <ul>
                     {items.map(item => (
-                        <li key={item.id}>{item.nombre}</li>
+                        <li key={item.id}>
+                            {item.nombre} 
+                            <span 
+                                className="remove-icon" 
+                                onClick={() => handleRemove(item.id)}
+                                style={{ cursor: 'pointer', marginLeft: '10px', color: 'red' }}
+                            >
+                                X
+                            </span>
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </div>
+    );
+};
+
+const SelectedItemsInvestigador = ({ items, label, setSelectedOptions, selectedOptions }) => {
+    const handleRemove = (id) => {
+        const newSelectedOptions = selectedOptions.filter(itemId => itemId !== id);
+        setSelectedOptions(newSelectedOptions);
+    };
+
+    return (
+        <div className="selected-items">
+            <h3>{label}</h3>
+            {items.length === 0 ? (
+                <p>No hay seleccionados.</p>
+            ) : (
+                <ul>
+                    {items.map(item => (
+                        <li key={item.id}>
+                            {item.nombre} {item.apellido} : {item.email}
+                            <span 
+                                className="remove-icon" 
+                                onClick={() => handleRemove(item.id)}
+                                style={{ cursor: 'pointer', marginLeft: '10px', color: 'red' }}
+                            >
+                                X
+                            </span>
+                        </li>
                     ))}
                 </ul>
             )}
@@ -189,7 +275,7 @@ export function CreateProject() {
             }
         }
     
-        setResearchers(allResearchers);
+        setInvestigadores(allResearchers);
     };
 
     const handleSearchGrupo = (e) => {
@@ -203,6 +289,11 @@ export function CreateProject() {
 
     const handleCreateProject = async () => {
         const projectName = document.querySelector("input[placeholder='Nombre']").value;
+        const projectDescription = document.querySelector("input[placeholder='Descripción']").value;
+        const projectLink = document.querySelector("input[placeholder='Link']").value;
+        const projectKeyword = document.querySelector("input[placeholder='Keyword']").value;
+        const projectDate = document.querySelector("input[placeholder='Fecha']").value;
+        
     
         if (!projectName) {
             alert("Por favor, completa el nombre del proyecto");
@@ -220,6 +311,7 @@ export function CreateProject() {
                     nombre: projectName,
                     descripcion: projectDescription,
                     link: projectLink,
+                    keyword: projectKeyword,
                     fecha: projectDate,
                     grupos: selectedGroups,
                     investigadores: selectedResearchers,
@@ -255,6 +347,7 @@ export function CreateProject() {
             <input type="text" placeholder="Nombre" className="input-field" required />
             <input type="text" placeholder="Descripción" className="input-field" required />
             <input type="text" placeholder="Link" className="input-field" />
+            <input type="text" placeholder="Keyword" className="input-field" />
             <input type='date' placeholder="Fecha" className="input-field" />
             <SelectWithSearch
                 options={grupos}
@@ -262,7 +355,7 @@ export function CreateProject() {
                 setSelectedOptions={setSelectedGroups}
                 label="Seleccionar Grupos"
             />
-            <SelectWithSearch
+            <SelectWithSearchInvestigador
                 options={investigadores}
                 selectedOptions={selectedResearchers}
                 setSelectedOptions={setSelectedResearchers}
@@ -270,11 +363,24 @@ export function CreateProject() {
             />
             
             {/* Mostrar grupos seleccionados */}
-            <SelectedItems items={selectedGruposData} label="Grupos Seleccionados" />
+            <SelectedItems 
+                items={selectedGruposData} 
+                label="Grupos Seleccionados" 
+                selectedOptions={selectedGroups}
+                setSelectedOptions={setSelectedGroups}    
+            />
             
             {/* Mostrar investigadores seleccionados */}
-            <SelectedItems items={selectedInvestigadoresData} label="Investigadores Seleccionados" />
+            <SelectedItemsInvestigador
+                items={selectedInvestigadoresData} 
+                label="Investigadores Seleccionados" 
+                selectedOptions={selectedResearchers}
+                setSelectedOptions={setSelectedResearchers}
+                
+            />
 
+
+        
             <button onClick={handleCreateProject}>{title}</button>
         </div>
 

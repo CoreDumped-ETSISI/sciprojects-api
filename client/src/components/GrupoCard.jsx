@@ -60,7 +60,7 @@ export function GrupoCard({ id }) {
     if (loading) return <p>Cargando...</p>;
 
     const handleModifyClick = () => {
-        Navigate(`/modify-group/${grupo.id}`);
+        Navigate(`/modify-project/${grupo.id}`);
     };
 
     return (
