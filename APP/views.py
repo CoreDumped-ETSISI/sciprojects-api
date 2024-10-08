@@ -372,23 +372,6 @@ class ProyectoViewSet(mixins.ListModelMixin,
     serializer_class = ProyectoSerializer
     queryset = proyectos.find()
 
-        
-def send_email(email, password_generated):
-    try:
-        # send email
-        send_mail(
-            'Subject here',
-            f'Here is your password: {password_generated}',
-            os.environ.get('email_server'),
-            [email],
-            fail_silently=False,
-        )
-    except Exception as e:
-        print('Email not sent')
-        return False
-    return True
-
-
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -407,14 +390,26 @@ def signup(request):
             if not investigadores.find_one({"email": username}):
                 investigadores.insert_one({"email": username})
             
-            if send_email(username, password_generated):
+            if enviar_correo(username, password_generated):
                 token = Token.objects.create(user=user)
                 return Response({'token': str(token), "user": username}, status=200)
             else:
                 return Response({"error": "Email not sent."}, status=500)
 
         except IntegrityError:
-            return Response({"error": "Username already exists."}, status=400)
+            
+            # Cambiamos contraseña y se lo mandamos al usuario
+            user = User.objects.get(username=username)
+            user.set_password(password_generated)
+            user.save()
+
+            if not investigadores.find_one({"email": username}):
+                investigadores.insert_one({"email": username})
+            
+            if enviar_correo(username, password_generated):
+                token, created = Token.objects.get_or_create(user=user)
+                return Response({'token': str(token), "user": username}, status=200)
+
     
     else:
         return Response({"error": "Invalid email."}, status=400)
@@ -460,3 +455,39 @@ def modify_password(request):
     user.set_password(new_password)
     user.save()
     return Response({"message": "Password updated."}, status=200)
+
+
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+
+def enviar_correo(recipient_email, password):
+
+    try :
+
+        EMAIL_HOST_USER = os.getenv('UPM_EMAIL_ADDRESS')
+
+        mensaje = f"""
+        Estimado usuario,
+
+        Bienvenido a la plataforma de investigación. 
+        Su usuario es: {recipient_email}
+        Su contraseña es: {password}
+
+        """
+        send_mail(
+            'Credenciales de acceso',
+            mensaje,
+            EMAIL_HOST_USER,
+            [recipient_email],
+            fail_silently=False,
+        )
+
+        return True
+
+    except Exception as e:
+        print(e)
+        return False
+    return False

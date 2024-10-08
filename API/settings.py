@@ -180,3 +180,13 @@ SIMPLE_JWT = {
 
 # CORS
 CORS_ORIGIN_WHITELIST = ['http://localhost:5173']
+
+from dotenv import load_dotenv
+load_dotenv()
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.upm.es'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True  # Usar STARTTLS
+EMAIL_HOST_USER = os.getenv('UPM_EMAIL_ADDRESS')  # tu correo completo
+EMAIL_HOST_PASSWORD = os.getenv('UPM_EMAIL_PASSWORD')  # tu contraseña

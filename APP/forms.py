@@ -106,42 +106,6 @@ class ProyectoForm(forms.Form):
         }
         return proyectos.insert_one(proyecto).inserted_id
 
-def UserCreationForm(ModelForm):
-    class Meta:
-        model = User
-        fields = ["username"]
-        labels = {
-            "username": "Correo"
-        }
-        widgets = {
-            "username": forms.EmailInput(attrs={"class": "form-control"},)
-        }
-        help_texts = {
-            "username": None
-        }
-        error_messages = {
-            "username": {
-                "unique": "Ya existe un usuario con este correo."
-            }
-        }
-        def clean_username(self):
-            username = self.cleaned_data['username']
-            if User.objects.filter(username=username).exists():
-                raise forms.ValidationError("Ya existe un usuario con este correo.")
-            return username
-        
-        def save(self, commit=True):
-            user = super().save(commit=False)
-            # Crear un usuario con contraseña aleatoria
-            password = User.objects.make_random_password()
-            user.set_password(password)
-            # ENviar un email con la contraseña
-            user.email_user(
-                "Bienvenido a la plataforma de investigación",
-                f"Su contraseña es: {password}"
-            )
-            print('Password:', password)
-            if commit:
-                user.save()
-            return user
-        
+
+
+
