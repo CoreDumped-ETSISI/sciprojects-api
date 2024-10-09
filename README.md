@@ -21,6 +21,9 @@ python3 manage.py runserver
 cd client
 
 npm install
+npm install @fortawesome/fontawesome-free
+npm install jwt-decode
+
 
 npm run dev
 
