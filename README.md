@@ -1,5 +1,12 @@
 # sciprojects-api
 
+
+### Ejecución
+chmod +x setup.sh
+./setup.sh
+
+
+
 ## Configuración
 
 ### 1. Crear el archivo `.env`
