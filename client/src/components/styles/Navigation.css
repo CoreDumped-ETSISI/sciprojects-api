@@ -1,26 +1,49 @@
-
-
-
-/* Navigation.css */
 .navbar {
-    background-color: #343a40; /* Color oscuro */
+    background-color: #e0e0e0; /* Light gray background */
+    border: 2px solid #add8e6; /* Light blue border */
+    border-radius: 8px; /* Rounded corners */
+    padding: 10px; /* Add padding for spacing */
+    display: flex; /* Use flexbox for better alignment */
+    align-items: center; /* Center items vertically */
+    justify-content: space-between; /* Space out the items */
 }
 
 .nav-link {
-    color: #f8f9fa !important; /* Color blanco para las opciones */
-    transition: color 0.3s ease; /* Efecto suave en hover */
+    color: #000000 !important; /* Black text color */
+    position: relative; /* Set position to relative for the pseudo-element */
+    padding: 10px 15px; /* Add padding around the links for better click area */
+    text-decoration: none; /* Remove underline from links */
+    overflow: hidden; /* Hide the overflow of the pseudo-element */
 }
 
-.nav-link:hover {
-    color: #ffc107 !important; /* Color dorado en hover */
+.nav-link::after {
+    content: ''; /* Required for pseudo-element */
+    position: absolute; /* Position relative to the nav-link */
+    height: 2px; /* Height of the line */
+    width: 100%; /* Full width of the link */
+    background: #9bd0e1; /* Line color */
+    bottom: 0; /* Position at the bottom */
+    left: 50%; /* Start in the center */
+    transform: translateX(-50%) scaleX(0); /* Center it and scale to 0 for animation */
+    transition: transform 0.3s ease; /* Smooth transition */
+}
+
+.nav-link:hover::after {
+    transform: translateX(-50%) scaleX(1); /* Expand to full width on hover */
 }
 
 .navbar-brand img {
-    max-height: 50px; /* Ajusta el tamaño del logo */
+    max-height: 50px; /* Adjust logo size */
 }
 
 @media (max-width: 992px) {
     .navbar-brand img {
-        max-height: 40px; /* Ajuste para pantallas pequeñas */
+        max-height: 40px; /* Adjust logo size for smaller screens */
+    }
+
+    .navbar {
+        flex-direction: column; /* Stack items vertically on small screens */
+        align-items: flex-start; /* Align items to the start */
+        padding: 15px; /* More padding for small screens */
     }
 }

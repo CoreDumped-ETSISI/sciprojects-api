@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getProyectos } from '../api/proyectos.api';
 import { ProyectoCard } from './ProyectoCard';
 import { useSearchParams } from 'react-router-dom';
+import './styles/Pagination.css';
 
 /**
  * ProyectosList es un componente de React que se encarga de mostrar una lista de proyectos, 
@@ -111,22 +112,28 @@ export function ProyectosList() {
                     placeholder="Buscar proyecto"
                 />
             </div>
+            
+            <div className="controls">
+                <div className="sort-dropdown">
+                    <label htmlFor="sortSelect">Ordenar por:</label>
+                    <select id="sortSelect" className="sort-select" onChange={(e) => handleSortChange(e.target.value)}>
+                        <option value="nombre">Nombre</option>
+                        <option value="descripcion">Descripción</option>
+                        <option value="fecha">Fecha</option>
+                    </select>
+                </div>
 
-            <div>
-                <button onClick={() => handleSortChange('nombre')}>Ordenar por Nombre</button>
-                <button onClick={() => handleSortChange('descripcion')}>Ordenar por Descripción</button>
-                <button onClick={() => handleSortChange('fecha')}>Ordenar por Fecha</button>
+                <div className="page-size-container">
+                    <label htmlFor="pageSize" className="page-size-label">Resultados por página:</label>
+                    <select id="pageSize" value={pageSize} onChange={handlePageSizeChange} className="page-size-select">
+                        <option value={5}>5</option>
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                        <option value={50}>50</option>
+                    </select>
+                </div>
             </div>
 
-            <div>
-                <label htmlFor="pageSize">Resultados por página:</label>
-                <select id="pageSize" value={pageSize} onChange={handlePageSizeChange}>
-                    <option value={5}>5</option>
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                </select>
-            </div>
 
             <div>
                 {proyectos.map((proyecto) => (
