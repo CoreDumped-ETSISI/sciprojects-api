@@ -3,7 +3,6 @@ import { getProyectos } from '../api/proyectos.api';
 import { ProyectoCard } from './ProyectoCard';
 import { useSearchParams } from 'react-router-dom';
 import './styles/Pagination.css';
-import './styles/Pagination.css';
 
 
 /**
