@@ -6,9 +6,21 @@
     display: flex; /* Use flexbox for better alignment */
     align-items: center; /* Center items vertically */
     justify-content: space-between; /* Space out the items */
+    background-color: #e0e0e0; /* Light gray background */
+    border: 2px solid #add8e6; /* Light blue border */
+    border-radius: 8px; /* Rounded corners */
+    padding: 10px; /* Add padding for spacing */
+    display: flex; /* Use flexbox for better alignment */
+    align-items: center; /* Center items vertically */
+    justify-content: space-between; /* Space out the items */
 }
 
 .nav-link {
+    color: #000000 !important; /* Black text color */
+    position: relative; /* Set position to relative for the pseudo-element */
+    padding: 10px 15px; /* Add padding around the links for better click area */
+    text-decoration: none; /* Remove underline from links */
+    overflow: hidden; /* Hide the overflow of the pseudo-element */
     color: #000000 !important; /* Black text color */
     position: relative; /* Set position to relative for the pseudo-element */
     padding: 10px 15px; /* Add padding around the links for better click area */
@@ -32,6 +44,7 @@
 }
 
 .navbar-brand img {
+    max-height: 50px; /* Adjust logo size */
     max-height: 50px; /* Adjust logo size */
 }
 

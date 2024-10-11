@@ -7,6 +7,13 @@ read -p "Introduce tu correo UPM: " UPM_EMAIL_ADDRESS
 read -s -p "Introduce tu contraseña UPM: " UPM_EMAIL_PASSWORD
 echo # Esta línea es para un salto de línea después de la contraseña
 
+# Solicita al usuario su correo UPM
+read -p "Introduce tu correo UPM: " UPM_EMAIL_ADDRESS
+
+# Solicita al usuario su contraseña UPM (oculta la entrada)
+read -s -p "Introduce tu contraseña UPM: " UPM_EMAIL_PASSWORD
+echo # Esta línea es para un salto de línea después de la contraseña
+
 # Crea un archivo .env para guardar variables de entorno
 echo "Crea un archivo .env para guardar variables de entorno"
 echo "UPM_EMAIL_ADDRESS='$UPM_EMAIL_ADDRESS'" > .env
@@ -77,6 +84,10 @@ echo "Navegando al directorio del cliente..."
 cd client || exit
 echo "Instalando dependencias de npm..."
 npm install
+npm install @fortawesome/fontawesome-free
+npm install jwt-decode
+npm install vite
+
 npm install @fortawesome/fontawesome-free
 npm install jwt-decode
 npm install vite
