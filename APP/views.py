@@ -498,7 +498,6 @@ def modify_password(request):
     return Response({"message": "Password updated."}, status=200)  # Respuesta exitosa
 
 
-
 load_dotenv()  # Carga las variables de entorno desde el archivo .env
 
 def enviar_correo(recipient_email, password):

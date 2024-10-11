@@ -12,7 +12,6 @@ echo "Crea un archivo .env para guardar variables de entorno"
 echo "UPM_EMAIL_ADDRESS='$UPM_EMAIL_ADDRESS'" > .env
 echo "UPM_EMAIL_PASSWORD='$UPM_EMAIL_PASSWORD'" >> .env
 
-
 # Verifica si Docker está corriendo
 if ! sudo systemctl is-active --quiet docker; then
     echo "Docker no está corriendo. Iniciando Docker..."
@@ -34,7 +33,6 @@ else
     echo "El contenedor de MongoDB ya está corriendo."
 fi
 
-
 echo "MONGO_URI='mongodb://localhost:27017/'" >> .env
 echo "MONGO_DB='WEB_INVESTIGACION'" >> .env
 
@@ -48,6 +46,31 @@ python3 manage.py migrate
 python3 manage.py makemigrations
 echo "Iniciando el servidor de Django..."
 python3 manage.py runserver &
+
+
+# Instalar NVM si no está instalado
+echo "Instalando nvm y Node.js versión 18..."
+if ! command -v nvm &> /dev/null; then
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
+
+    # Sourcing NVM
+    export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+fi
+
+# Asegurando que NVM está disponible
+export NVM_DIR="$HOME/.nvm"
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+    \. "$NVM_DIR/nvm.sh"  # Cargar NVM
+    echo "NVM cargado correctamente."
+else
+    echo "Error: No se pudo cargar NVM."
+    exit 1
+fi
+
+# Instalar Node.js versión 18
+nvm install 18
+nvm use 18
 
 # Frontend
 echo "Navegando al directorio del cliente..."

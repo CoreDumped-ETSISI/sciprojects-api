@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import './styles/Navigation.css';  // Para estilos personalizados
+import './styles/Navigation.css';
 
 
 /**
@@ -42,7 +42,7 @@ export function Navigation() {
     };
 
     return (
-        <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
+        <nav className="navbar navbar-expand-lg navbar-dark bg-light">
             <div className="container">
                 <Link className="navbar-brand" to="/">
                     <img
