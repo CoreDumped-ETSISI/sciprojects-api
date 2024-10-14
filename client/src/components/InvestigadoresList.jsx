@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getInvestigadores } from '../api/investigadores.api';
 import { InvestigadorCard } from './InvestigadorCard';
+import './styles/Pagination.css';
 
 /**
  * InvestigadoresList es un componente de React que muestra una lista de investigadores 
@@ -96,20 +97,25 @@ export function InvestigadoresList() {
         />
       </div>
 
-      <div>
-        <button onClick={() => handleSortChange('nombre')}>Ordenar por Nombre</button>
-        <button onClick={() => handleSortChange('apellido')}>Ordenar por Apellido</button>
-      </div>
+      <div className='controls'>
+		<div className='sort-dropdown'>
+			<label htmlFor="sortSelect">Ordenar por:</label>
+			<select id="sortSelect" value={sortField} onChange={(e) => handleSortChange(e.target.value)}>
+				<option value="nombre">Nombre</option>
+				<option value="apellido">Apellido</option>
+			</select>
+		</div>
 
-      <div>
-        <label htmlFor="pageSize">Resultados por página:</label>
-        <select id="pageSize" value={pageSize} onChange={handlePageSizeChange}>
-          <option value={5}>5</option>
-          <option value={10}>10</option>
-          <option value={20}>20</option>
-          <option value={50}>50</option>
-        </select>
-      </div>
+		<div className='page-size-container'>
+			<label htmlFor="pageSize">Resultados por página:</label>
+			<select id="pageSize" value={pageSize} onChange={handlePageSizeChange}>
+			<option value={5}>5</option>
+			<option value={10}>10</option>
+			<option value={20}>20</option>
+			<option value={50}>50</option>
+			</select>
+		</div>
+	</div>
 
       <div>
         {investigadores.map((investigador) => (

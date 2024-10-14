@@ -418,41 +418,23 @@ def signup(request):
     # Verifica si el correo del usuario termina en @upm.es o @alumnos.upm.es
     if username.endswith('@upm.es') or username.endswith('@alumnos.upm.es'):
 
-        # Genera una contraseña aleatoria de 8 caracteres
-        password_generated = get_random_string(length=8)
-        user = User(username=username)  # Crea una instancia del usuario
-        user.set_password(password_generated)  # Establece la contraseña generada
 
-        try:
+        # SI no existe el usuario, lo crea
+
+        if not User.objects.filter(username=username).exists() and not investigadores.find_one({"email": username}):
+            user = User(username=username)  # Crea una instancia del usuario
+            user.set_password(request.data.get("password"))  # Establece la contraseña del usuario
+
             user.save()  # Intenta guardar el nuevo usuario en la base de datos
-            # Verifica si el investigador no está ya registrado
-            if not investigadores.find_one({"email": username}):
-                investigadores.insert_one({"email": username})  # Inserta el investigador en la colección
-            
-            # Envía un correo con las credenciales al usuario
-            if enviar_correo(username, password_generated):
-                token = Token.objects.create(user=user)  # Crea un token de autenticación para el usuario
-                return Response({'token': str(token), "user": username}, status=200)  # Devuelve el token y el nombre de usuario
-            else:
-                return Response({"error": "Email not sent."}, status=500)  # Mensaje de error si el correo no se envió
-
-        except IntegrityError:
-            # Captura un error de integridad si el usuario ya existe
-            user = User.objects.get(username=username)  # Recupera el usuario existente
-            user.set_password(password_generated)  # Establece una nueva contraseña
-            user.save()  # Guarda el usuario actualizado
-
-            # Verifica si el investigador no está ya registrado
-            if not investigadores.find_one({"email": username}):
-                investigadores.insert_one({"email": username})  # Inserta el investigador en la colección
-            
-            # Envía un correo con las credenciales al usuario
-            if enviar_correo(username, password_generated):
-                token, created = Token.objects.get_or_create(user=user)  # Obtiene o crea un token para el usuario
-                return Response({'token': str(token), "user": username}, status=200)  # Devuelve el token y el nombre de usuario
+        
+            investigadores.insert_one({"email": username})
+            return Response({"message": "User created."}, status=201)  # Mensaje de éxito si el usuario se crea correctamente
+        else:
+            return Response({"error": "User already exists."}, status=400)         
 
     else:
         return Response({"error": "Invalid email."}, status=400)  # Mensaje de error si el correo no es válido
+
 
 
 @api_view(['POST'])  # Permite que la vista acepte solicitudes POST
@@ -486,42 +468,24 @@ def signout(request):
         return redirect('home')  # Redirige a la página principal (home)
 
 
-@api_view(['POST'])  # Permite que la vista acepte solicitudes POST
-@authentication_classes([TokenAuthentication])  # Requiere autenticación mediante token
-@permission_classes([IsAuthenticated])  # Requiere que el usuario esté autenticado
+@api_view(['PUT'])  # Allow PUT requests
+@permission_classes([IsAuthenticated])  # Require the user to be authenticated
 def modify_password(request):
-    username = request.user.username  # Obtiene el nombre de usuario del usuario autenticado
-    new_password = request.data.get("new_password")  # Obtiene la nueva contraseña del cuerpo de la solicitud
-    user = User.objects.get(username=username)  # Recupera el usuario de la base de datos
-    user.set_password(new_password)  # Establece la nueva contraseña
-    user.save()  # Guarda el usuario actualizado
-    return Response({"message": "Password updated."}, status=200)  # Respuesta exitosa
+    username = request.user.username  # Get the authenticated user's username
+    new_password = request.data.get("new_password")  # Get the new password from the request
+    password = request.data.get("password")  # Get the current password from the request
 
+    if not password or not new_password:
+        return Response({"error": "Both current and new passwords are required."}, status=400)
 
-load_dotenv()  # Carga las variables de entorno desde el archivo .env
+    # Authenticate the user with the current password
+    user = authenticate(request, username=username, password=password)
 
-def enviar_correo(recipient_email, password):
-    try:
-        EMAIL_HOST_USER = os.getenv('UPM_EMAIL_ADDRESS')  # Obtiene la dirección de correo electrónico del host desde las variables de entorno
-
-        mensaje = f"""
-        Estimado usuario,
-
-        Bienvenido a la plataforma de investigación. 
-        Su usuario es: {recipient_email}
-        Su contraseña es: {password}
-        """  # Crea el mensaje de correo electrónico
-
-        # Envía el correo electrónico utilizando la función send_mail
-        send_mail(
-            'Credenciales de acceso',  # Asunto del correo
-            mensaje,  # Contenido del mensaje
-            EMAIL_HOST_USER,  # Dirección de correo del remitente
-            [recipient_email],  # Lista de destinatarios
-            fail_silently=False,  # Si se produce un error, se lanzará una excepción
-        )
-
-        return True  # Retorna True si el correo se envió exitosamente
-
-    except Exception as e:
-        return False  # Retorna False si hubo un error al enviar el correo
+    if user is None:
+        print("Current password did not match.")
+        return Response({"error": "Current password did not match."}, status=400)
+    else:
+        # Set the new password and save the user
+        user.set_password(new_password)
+        user.save()
+        return Response({"message": "Password updated successfully."}, status=200)

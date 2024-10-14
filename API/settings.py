@@ -129,24 +129,6 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-# send ema
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.environ.get('email_server')
-EMAIL_HOST_PASSWORD = os.environ.get('email_password_server')
-
-"""para crear las variables email_server y email_password_server en la terminal:
-export
-email_server="
-email_password_server="
-"""
-
 # settings.py
 import pymongo
 from pymongo import MongoClient
@@ -181,12 +163,3 @@ SIMPLE_JWT = {
 # CORS
 CORS_ORIGIN_WHITELIST = ['http://localhost:5173']
 
-from dotenv import load_dotenv
-load_dotenv()
-
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.upm.es'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True  # Usar STARTTLS
-EMAIL_HOST_USER = os.getenv('UPM_EMAIL_ADDRESS')  # tu correo completo
-EMAIL_HOST_PASSWORD = os.getenv('UPM_EMAIL_PASSWORD')  # tu contraseña

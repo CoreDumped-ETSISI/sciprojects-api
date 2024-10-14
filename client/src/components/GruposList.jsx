@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { getGrupos } from '../api/grupos.api';
 import { GrupoCard } from './GrupoCard';
+import './styles/Pagination.css';
+
 
 
 /**
@@ -85,20 +87,28 @@ export function GruposList() {
                 />
             </div>
 
-            <div>
-                <button onClick={() => handleSortChange('nombre')}>Ordenar por Nombre</button>
-                <button onClick={() => handleSortChange('descripcion')}>Ordenar por Descripción</button>
+            <div className='controls'>
+
+                <div className='sort-dropdown'>
+                    <label htmlFor="sortSelect">Ordenar por:</label>
+                    <select id="sortSelect" className="sort-select" onChange={(e) => handleSortChange(e.target.value)}>
+                        <option value="nombre">Nombre</option>
+                        <option value="descripcion">Descripción</option>
+                    </select>
+                </div>
+                <div className='page-size-container'>
+                    <label htmlFor="pageSize" className="page-size-label">Resultados por página:</label>
+                    <select id="pageSize" value={pageSize} onChange={handleResultsPerPageChange}>
+                        <option value={5}>5</option>
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                        <option value={50}>50</option>
+                    </select>
+                </div>
             </div>
 
-            <div>
-                <label htmlFor="pageSize">Resultados por página:</label>
-                <select id="pageSize" value={pageSize} onChange={handleResultsPerPageChange}>
-                    <option value={5}>5</option>
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                </select>
-            </div>
+
+
 
             <div>
                 {grupos.map((grupo) => (

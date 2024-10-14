@@ -111,13 +111,16 @@ export function MyProfile() {
     const handleUpdatePassword = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch(`http://localhost:8000/api/v1/change_password`, {
+            const response = await fetch(`http://localhost:8000/api/v1/change_password/`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
                 },
-                body: JSON.stringify({ password, newPassword }),
+                body: JSON.stringify({ 
+                    password: password,
+                    new_password: newPassword,
+                }),
             });
             const data = await response.json();
             if (response.ok) {

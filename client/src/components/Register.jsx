@@ -26,6 +26,7 @@ export function Register() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState(null);
   const [message, setMessage] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,7 +39,7 @@ export function Register() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username: email }),
+        body: JSON.stringify({ username: email, password:  password}),
       });
 
       const data = await response.json();
@@ -67,6 +68,15 @@ export function Register() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Ingresa tu correo"
+          required
+          className="input-field"
+        />
+
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Ingresa tu contraseña"
           required
           className="input-field"
         />
