@@ -100,7 +100,7 @@ export function InvestigadoresList() {
       <div className='controls'>
 		<div className='sort-dropdown'>
 			<label htmlFor="sortSelect">Ordenar por:</label>
-			<select id="sortSelect" value={sortField} onChange={(e) => handleSortChange(e.target.value)}>
+			<select id="sortSelect" class="sort-select" value={sortField} onChange={(e) => handleSortChange(e.target.value)}>
 				<option value="nombre">Nombre</option>
 				<option value="apellido">Apellido</option>
 			</select>
@@ -108,7 +108,7 @@ export function InvestigadoresList() {
 
 		<div className='page-size-container'>
 			<label htmlFor="pageSize">Resultados por página:</label>
-			<select id="pageSize" value={pageSize} onChange={handlePageSizeChange}>
+			<select id="pageSize" class="page-size-select" value={pageSize} onChange={handlePageSizeChange}>
 			<option value={5}>5</option>
 			<option value={10}>10</option>
 			<option value={20}>20</option>

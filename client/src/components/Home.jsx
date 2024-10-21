@@ -22,12 +22,12 @@ export const Home = () => {
     // Mostar componente investigadores
     return (
         <div>
-            <h1>Inicio</h1>
+            {/* <h1>Inicio</h1>
             <ProyectosList />
             <GruposList />
-            <InvestigadoresList />
+            <InvestigadoresList /> */}
+            <p>Bienvenido al repositorio de proyectos de la UPM.</p>
         </div>
-
     );
 
 }

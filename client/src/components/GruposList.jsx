@@ -98,7 +98,7 @@ export function GruposList() {
                 </div>
                 <div className='page-size-container'>
                     <label htmlFor="pageSize" className="page-size-label">Resultados por página:</label>
-                    <select id="pageSize" value={pageSize} onChange={handleResultsPerPageChange}>
+                    <select id="pageSize" class="page-size-select" value={pageSize} onChange={handleResultsPerPageChange}>
                         <option value={5}>5</option>
                         <option value={10}>10</option>
                         <option value={20}>20</option>
