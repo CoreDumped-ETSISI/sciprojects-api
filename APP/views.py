@@ -409,6 +409,7 @@ class ProyectoViewSet(mixins.ListModelMixin,
     serializer_class = ProyectoSerializer  # Repetido, se puede eliminar
     queryset = proyectos.find()  # Este campo no debería estar aquí, ya que queryset debe definirse en la clase padre
 
+
 @api_view(['POST'])  # Decorador que permite que la vista solo acepte solicitudes POST
 @permission_classes([AllowAny])  # Permite que cualquier usuario, autenticado o no, acceda a esta vista
 def signup(request):

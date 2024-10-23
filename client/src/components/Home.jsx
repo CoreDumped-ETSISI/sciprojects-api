@@ -2,7 +2,10 @@
 import React, { useEffect, useState } from 'react';
 import { InvestigadoresList } from './InvestigadoresList';
 import { ProyectosList } from './ProyectosList';
-import { GruposList } from './GruposList';/**
+import { GruposList } from './GruposList';
+import BarraBusqueda from './BarraBusqueda';
+/**
+
 * Home es un componente de React que actúa como la página de inicio de la 
 * aplicación. Se encarga de renderizar tres componentes principales: 
 * ProyectosList, GruposList e InvestigadoresList. 
@@ -27,6 +30,8 @@ export const Home = () => {
             <GruposList />
             <InvestigadoresList /> */}
             <p>Bienvenido al repositorio de proyectos de la UPM.</p>
+            <BarraBusqueda />
+
         </div>
     );
 

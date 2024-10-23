@@ -97,3 +97,5 @@ export function InvestigadorCard({ id }) {
     </div>
   );
 }
+
+export default InvestigadorCard;

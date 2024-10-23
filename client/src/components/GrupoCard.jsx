@@ -134,3 +134,5 @@ export function GrupoCard({ id }) {
         </div>
     );
 }
+
+export default GrupoCard;

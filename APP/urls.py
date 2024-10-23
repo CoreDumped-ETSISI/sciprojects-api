@@ -19,7 +19,6 @@ router = routers.DefaultRouter()
 router.register(r'investigadores', views.InvestigadorViewSet, basename='investigador')  # Ruta para 'investigadores'
 router.register(r'grupos', views.GrupoViewSet, basename='grupo')                      # Ruta para 'grupos'
 router.register(r'proyectos', views.ProyectoViewSet, basename='proyecto')              # Ruta para 'proyectos'
-
 # Definición de las rutas de la aplicación.
 urlpatterns = [
 

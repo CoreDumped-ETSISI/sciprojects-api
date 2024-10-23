@@ -5,6 +5,7 @@
     "@popperjs/core": "^2.11.8",
     "bootstrap": "^5.3.3",
     "jwt-decode": "^4.0.0",
+    "react-redux": "^9.1.2",
     "vite": "^5.4.8"
   }
 }

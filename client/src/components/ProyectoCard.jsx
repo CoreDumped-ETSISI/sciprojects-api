@@ -188,3 +188,5 @@ export function ProyectoCard({ id }) {
         </div>
     );
 }
+
+export default ProyectoCard;
