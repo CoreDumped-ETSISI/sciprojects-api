@@ -1,91 +1,43 @@
 #!/bin/bash
 
-# Solicita al usuario su correo UPM
-read -p "Introduce tu correo UPM: " UPM_EMAIL_ADDRESS
+# Definir variables
+MONGO_CONTAINER_NAME="mongoDb"
+CLIENT_CONTAINER_NAME="client"
+BACKEND_CONTAINER_NAME="backend"
 
-# Solicita al usuario su contraseña UPM (oculta la entrada)
-read -s -p "Introduce tu contraseña UPM: " UPM_EMAIL_PASSWORD
-echo # Esta línea es para un salto de línea después de la contraseña
+# Colores para el output
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m' # Sin color
 
-# Crea un archivo .env para guardar variables de entorno
-echo "Crea un archivo .env para guardar variables de entorno"
-echo "UPM_EMAIL_ADDRESS='$UPM_EMAIL_ADDRESS'" > .env
-echo "UPM_EMAIL_PASSWORD='$UPM_EMAIL_PASSWORD'" >> .env
+echo -e "${GREEN}Comenzando el setup del proyecto...${NC}"
 
-# Verifica si Docker está corriendo
-if ! sudo systemctl is-active --quiet docker; then
-    echo "Docker no está corriendo. Iniciando Docker..."
-    sudo systemctl start docker
-fi
+# Construir y levantar los contenedores
+echo -e "${GREEN}Creando y levantando contenedores de Docker...${NC}"
+docker-compose up -d --build
 
-# Verifica si el contenedor de MongoDB ya está corriendo
-if [ ! "$(docker ps -q -f name=mongo-db)" ]; then
-    if [ "$(docker ps -aq -f status=exited -f name=mongo-db)" ]; then
-        # Si el contenedor existe pero está detenido, lo iniciamos
-        echo "Iniciando contenedor de MongoDB existente..."
-        docker start mongo-db
-    else
-        # Si no existe, lo creamos
-        echo "Iniciando nuevo contenedor de Docker para MongoDB..."
-        docker run -d --name mongo-db -p 27017:27017 mongo
-    fi
-else
-    echo "El contenedor de MongoDB ya está corriendo."
-fi
-
-echo "MONGO_URI='mongodb://localhost:27017/'" >> .env
-echo "MONGO_DB='WEB_INVESTIGACION'" >> .env
-
-# Instala las dependencias de Python
-echo "Instalando dependencias de Python..."
-pip install -r requirements.txt
-
-# Backend
-echo "Realizando migraciones en el backend..."
-python3 manage.py migrate
-python3 manage.py makemigrations
-echo "Iniciando el servidor de Django..."
-python3 manage.py runserver &
-
-
-# Instalar NVM si no está instalado
-echo "Instalando nvm y Node.js versión 18..."
-if ! command -v nvm &> /dev/null; then
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
-
-    # Sourcing NVM
-    export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-fi
-
-# Asegurando que NVM está disponible
-export NVM_DIR="$HOME/.nvm"
-if [ -s "$NVM_DIR/nvm.sh" ]; then
-    \. "$NVM_DIR/nvm.sh"  # Cargar NVM
-    echo "NVM cargado correctamente."
-else
-    echo "Error: No se pudo cargar NVM."
+# Esperar a que MongoDB esté listo
+echo -e "${GREEN}Esperando a que MongoDB esté listo...${NC}"
+COUNTER=0
+while ! docker exec -it $MONGO_CONTAINER_NAME mongo --username root --password root --eval "db.stats()" > /dev/null 2>&1
+do
+  echo -e "${RED}Esperando a MongoDB...${NC}"
+  sleep 3
+  COUNTER=$((COUNTER+1))
+  if [ $COUNTER -ge 40 ]; then  # Espera 2 minutos en total (40 * 3 segundos)
+    echo -e "${RED}MongoDB no respondió a tiempo. Por favor, revisa el contenedor de MongoDB.${NC}"
     exit 1
-fi
+  fi
+done
 
-# Instalar Node.js versión 18
-nvm install 18
-nvm use 18
+echo -e "${GREEN}MongoDB está listo y conectado.${NC}"
 
-# Frontend
-echo "Navegando al directorio del cliente..."
-cd client || exit
-echo "Instalando dependencias de npm..."
-npm install
-npm install @fortawesome/fontawesome-free
-npm install jwt-decode
-npm install vite
+# Ejecutar migraciones de Django
+echo -e "${GREEN}Aplicando migraciones de Django...${NC}"
+docker exec -it $BACKEND_CONTAINER_NAME python manage.py migrate
 
-npm install @fortawesome/fontawesome-free
-npm install jwt-decode
-npm install vite
+# Instalación de dependencias de frontend si es necesario
+echo -e "${GREEN}Instalando dependencias de frontend...${NC}"
+docker exec -it $CLIENT_CONTAINER_NAME npm install
 
-echo "Iniciando el servidor de desarrollo de npm..."
-npm run dev
-
-echo "Configuración completada."
+echo -e "${GREEN}Setup completo. Los servicios están corriendo.${NC}"

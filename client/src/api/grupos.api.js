@@ -2,12 +2,12 @@ import axios from 'axios';
 
 // Define la URL base dependiendo del entorno
 const BASE_URL =
-  process.env.NODE_ENV === "production"
+  import.meta.env.MODE === "production"
     ? import.meta.env.VITE_BACKEND_URL
-    : "http://localhost:8000";
+    : import.meta.env.VITE_REACT_APP_API_URL;
+
 
 // Log para verificar la URL
-console.log(BASE_URL);
 
 const gruposApi = axios.create({
   baseURL: `${BASE_URL}/api/v1/grupos/`,

@@ -16,17 +16,20 @@ from rest_framework.authtoken.models import Token
 
 from bson import ObjectId
 from django.utils.crypto import get_random_string
-from .serializers import InvestigadorSerializer, GrupoSerializer, ProyectoSerializer
+from serializers import InvestigadorSerializer, GrupoSerializer, ProyectoSerializer
 
 from dotenv import load_dotenv  # Importa para cargar variables de entorno desde un archivo .env
-
+from pymongo import MongoClient
 
 
 # Conexión al cliente de MongoDB
-my_client = pymongo.MongoClient("mongodb://localhost:27017/")
+
+my_client = MongoClient('mongodb://root:root@mongo:27017/')
+
+
 
 # Selección de la base de datos "WEB_INVESTIGACION"
-my_db = my_client["WEB_INVESTIGACION"]
+my_db = my_client['WEB_INVESTIGACION']
 
 # Selección de las colecciones de la base de datos
 investigadores = my_db["investigadores"]  # Colección para almacenar los datos de los investigadores
@@ -49,6 +52,7 @@ class InvestigadorPagination(PageNumberPagination):
     page_size = 10  # Tamaño de página por defecto
     page_size_query_param = 'page_size'  # Permite cambiar el tamaño de página
     max_page_size = 100  # Tamaño máximo de página
+
 
 # Importación de mixins y viewsets necesarios para crear un conjunto de vistas de investigadores
 class InvestigadorViewSet(mixins.ListModelMixin,
@@ -111,6 +115,9 @@ class InvestigadorViewSet(mixins.ListModelMixin,
         
         return Response(all_researchers)  # Devuelve todos los investigadores si no hay paginación
     
+    def queryset(self):
+        return investigadores.find()  # Devuelve todos los investigadores
+
     def retrieve(self, request, pk=None):
         # Obtiene un investigador específico utilizando su ID
         researcher = investigadores.find_one({"_id": ObjectId(pk)})
@@ -215,6 +222,9 @@ class GrupoViewSet(mixins.ListModelMixin,
 
         return Response(all_groups)  # Devuelve todos los grupos si no hay paginación
     
+    def queryset(self):
+        return grupos.find()
+
     def retrieve(self, request, pk=None):
         # Recupera un grupo específico por su ID
         group = grupos.find_one({"_id": ObjectId(pk)})
@@ -350,6 +360,9 @@ class ProyectoViewSet(mixins.ListModelMixin,
         return Response(all_projects)  # Devuelve todos los proyectos si no hay paginación
     
 
+    def queryset(self):
+        return proyectos.find()
+    
     def retrieve(self, request, pk=None):
         # Recupera un proyecto específico por su ID
         project = proyectos.find_one({"_id": ObjectId(pk)})
@@ -406,8 +419,6 @@ class ProyectoViewSet(mixins.ListModelMixin,
         groups = list(groups)  # Convierte el cursor en una lista
         return Response(groups)  # Devuelve la lista de grupos
 
-    serializer_class = ProyectoSerializer  # Repetido, se puede eliminar
-    queryset = proyectos.find()  # Este campo no debería estar aquí, ya que queryset debe definirse en la clase padre
 
 
 @api_view(['POST'])  # Decorador que permite que la vista solo acepte solicitudes POST
@@ -418,7 +429,6 @@ def signup(request):
 
     # Verifica si el correo del usuario termina en @upm.es o @alumnos.upm.es
     if username.endswith('@upm.es') or username.endswith('@alumnos.upm.es'):
-
 
         # SI no existe el usuario, lo crea
 
@@ -441,6 +451,7 @@ def signup(request):
 @api_view(['POST'])  # Permite que la vista acepte solicitudes POST
 @permission_classes([AllowAny])  # Permite que cualquier usuario acceda a esta vista sin autenticación
 def signin(request):
+
     username = request.data.get("email")  # Obtiene el correo electrónico del cuerpo de la solicitud
     password = request.data.get("password")  # Obtiene la contraseña del cuerpo de la solicitud
     

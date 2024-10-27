@@ -12,10 +12,11 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 from pathlib import Path
 import os
+from pymongo import MongoClient
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
@@ -26,7 +27,7 @@ SECRET_KEY = "django-insecure-1s_*ncri6t8u49svgb*4m+byfek0u@$)rc2e%7q#ee0b^3#2bx
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']  # You can specify your allowed hosts here
 
 
 # Application definition
@@ -38,12 +39,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "APP",
     "rest_framework",
     "rest_framework.authtoken",
     "corsheaders",
     "rest_framework_simplejwt",
-
 ]
 
 MIDDLEWARE = [
@@ -57,7 +56,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = "API.urls"
+ROOT_URLCONF = "urls"
 
 TEMPLATES = [
     {
@@ -75,23 +74,25 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "API.wsgi.application"
+WSGI_APPLICATION = "wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
+# For SQLite (comment out if using MongoDB)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-# USAMOS MONGODB CON PYMONGO
-from pymongo import MongoClient
 
-MONGO_CLIENT = MongoClient('mongodb://localhost:27017/')
-MONGO_DB = MONGO_CLIENT['WEB_INVESTIGACION']
+# MongoDB Configuration
+mongo_uri = os.getenv('mongodb://root:root@mongo:27017/WEB_INVESTIGACION')
+MONGO_CLIENT = MongoClient(mongo_uri)
+MONGO_DB = MONGO_CLIENT['WEB_INVESTIGACION']  # Change to your actual MongoDB database name
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -111,7 +112,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
@@ -129,16 +129,6 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
-# settings.py
-import pymongo
-from pymongo import MongoClient
-
-# Conexión a MongoDB
-MONGO_CLIENT = MongoClient('mongodb://localhost:27017/')
-MONGO_DB = MONGO_CLIENT['nombre_base_datos']
-
-# CORS authorization
-CORS_ALLOW_ALL_ORIGINS = True
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
@@ -151,15 +141,18 @@ REST_FRAMEWORK = {
     ],
 }
 
-from datetime import timedelta
-# Configuración de JWT
+# JWT Configuration
 SIMPLE_JWT = {
      'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
      'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
      'ROTATE_REFRESH_TOKENS': True,
-     'BLACKLIST_AFTER_ROTATION': True
+     'BLACKLIST_AFTER_ROTATION': True,
 }
 
 # CORS
-CORS_ORIGIN_WHITELIST = ['http://localhost:5173']
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://frontend:5173"]
+CORS_ALLOW_CREDENTIALS = True
 
+CORS_ORIGIN_ALLOW_ALL = True

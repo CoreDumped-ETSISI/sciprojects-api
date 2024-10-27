@@ -43,6 +43,7 @@
 .grupo-enlace, .investigador-enlace {
     text-decoration: none;
     color: #007bff;
+    font-size: 1.25rem;
 }
 
 .grupo-enlace:hover, .investigador-enlace:hover {

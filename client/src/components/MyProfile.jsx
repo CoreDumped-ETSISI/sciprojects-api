@@ -43,7 +43,7 @@ export function MyProfile() {
 
     const fetchInvestigador = async (email) => {
         try {
-            const response = await fetch(`http://localhost:8000/api/v1/investigadores?email=${email}`, {
+            const response = await fetch(`${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/investigadores?email=${email}`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
                     'Content-Type': 'application/json',
@@ -89,7 +89,7 @@ export function MyProfile() {
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch(`http://localhost:8000/api/v1/investigadores/${investigador.id}/`, {
+            const response = await fetch(`${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/investigadores/${investigador.id}/`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -111,7 +111,7 @@ export function MyProfile() {
     const handleUpdatePassword = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch(`http://localhost:8000/api/v1/change_password/`, {
+            const response = await fetch(`${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/change_password/`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -138,7 +138,8 @@ export function MyProfile() {
     }
 
     return (
-        <div>
+        <div className="profile-container">
+            <h2>Mi Perfil</h2>
             <p>Email: {investigador.email}</p>
             <form onSubmit={handleUpdateProfile}>
                 <input
@@ -195,7 +196,7 @@ export function MyProfile() {
                 <ul className="groups-list">
                     {grupos.length > 0 ? (
                         grupos.map((grupo) => (
-                            <li key={grupo.id}>
+                            <li key={grupo.id} className="group-item">
                                 <a href={`/grupos/${grupo.id}`} className="group-link">
                                     {grupo.nombre}
                                 </a>
@@ -213,7 +214,7 @@ export function MyProfile() {
                 <ul className="projects-list">
                     {proyectos.length > 0 ? (
                         proyectos.map((proyecto) => (
-                            <li key={proyecto.id}>
+                            <li key={proyecto.id} className="project-item">
                                 <a href={`/proyectos/${proyecto.id}`} className="project-link">
                                     {proyecto.nombre}
                                 </a>
@@ -224,6 +225,7 @@ export function MyProfile() {
                     )}
                 </ul>
             </div>
+
 
             {error && <p style={{ color: 'red' }}>{error}</p>}
             {message && <p style={{ color: 'green' }}>{message}</p>}

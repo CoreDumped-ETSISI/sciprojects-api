@@ -25,7 +25,8 @@ export function Login() {
 
     const handleLogin = async () => {
         try {
-            const response = await fetch('http://localhost:8000/api/v1/signin/', {
+            console.log(import.meta.env.VITE_REACT_APP_API_URL);
+            const response = await fetch(`${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/signin/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -49,6 +50,7 @@ export function Login() {
                 setError(data.error || 'Login fallido');
             }
         } catch (err) {
+            console.log(err);
             setError('Error al conectar con el servidor.');
         }
     };

@@ -1,11 +1,13 @@
 import axios from "axios";
 
-const URL =
-  process.env.NODE_ENV === "production"
-    ? import.meta.env.VITE_BACKEND_URL
-    : "http://localhost:8000";
 
-console.log(URL);
+const URL =
+  import.meta.env.MODE === "production"
+    ? import.meta.env.VITE_BACKEND_URL
+    : import.meta.env.VITE_REACT_APP_API_URL;
+
+  
+
 
 const investigadoresApi = axios.create({
   baseURL: `${URL}/api/v1/investigadores`,

@@ -34,7 +34,7 @@ export function Register() {
     setMessage("");
 
     try {
-      const response = await fetch("http://localhost:8000/api/v1/signup/", {
+      const response = await fetch(`${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/signup/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

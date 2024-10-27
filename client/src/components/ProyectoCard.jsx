@@ -129,17 +129,25 @@ export function ProyectoCard({ id }) {
                             <p>{proyecto.descripcion}</p>
                             {proyecto.fecha && <p>{proyecto.fecha}</p>}
 
+
                             {proyecto.keyword && (
                                 <p>
-                                    {proyecto.keyword.split(',').map((kw, index) => (
-                                        <span
-                                            key={index}
-                                            onClick={() => handleKeywordClick(kw.trim())} // Elimina espacios en blanco
-                                            style={{ cursor: 'pointer', textDecoration: 'underline', color: 'blue' }} // Estilo inline, puedes moverlo a tu CSS
-                                        >
-                                            {kw.trim()} {/* Asegúrate de eliminar espacios en blanco */}
-                                        </span>
-                                    ))}
+                                    {proyecto.keyword.split(',').map((kw, index) => {
+                                        const trimmedKeyword = kw.trim();
+                                        return (
+                                            trimmedKeyword && (
+                                                <span key={index}>
+                                                    <span
+                                                        onClick={() => handleKeywordClick(trimmedKeyword)}
+                                                        style={{ cursor: 'pointer', textDecoration: 'underline', color: 'blue' }}
+                                                    >
+                                                        {trimmedKeyword}
+                                                    </span>
+                                                    {index < proyecto.keyword.split(',').length - 1 && ' '} {/* Añade un espacio solo si no es la última palabra */}
+                                                </span>
+                                            )
+                                        );
+                                    })}
                                 </p>
                             )}
 

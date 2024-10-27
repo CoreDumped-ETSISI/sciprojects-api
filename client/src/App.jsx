@@ -64,6 +64,7 @@ function App() {
 
         <Route path="/create-project" element={<CreateProjectPage />} />
         <Route path="/modify-project/:id" element={<CreateProjectPage />} />
+        <Route path="*" element={<Navigate to="/" />} />
 
       </Routes>
     </BrowserRouter>

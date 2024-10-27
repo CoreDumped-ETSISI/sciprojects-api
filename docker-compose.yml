@@ -1,0 +1,59 @@
+services:
+
+
+  mongo:
+    image: mongo:latest
+    restart: always
+    container_name: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_DATABASE: WEB_INVESTIGACION
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - my_network
+
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+    container_name: backend
+    environment:
+      - MONGODB_URI=mongodb://root:root@mongo:27017/WEB_INVESTIGACION
+    volumes:
+      - ./API:/app/API
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongo
+    networks:
+      - my_network
+
+
+  frontend:
+    build:
+      context: .
+      dockerfile: client.Dockerfile
+    container_name: frontend
+    volumes:
+      - ./client:/app/client
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - my_network
+
+
+
+
+volumes:
+  mongo_data:
+
+networks:
+  my_network:
+    driver: bridge

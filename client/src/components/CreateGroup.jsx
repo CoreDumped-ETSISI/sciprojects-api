@@ -133,7 +133,7 @@ export function CreateGroup() {
     const handleDeleteGroup = async () => {
         if (confirmationName === name) {
             try {
-                const response = await fetchWithAuth(`http://localhost:8000/api/v1/grupos/${id}/`, {
+                const response = await fetchWithAuth(`${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/grupos/${id}/`, {
                     method: "DELETE",
                     headers: {
                         "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
@@ -161,7 +161,7 @@ export function CreateGroup() {
         if (id) {
             const fetchGroupData = async () => {
                 try {
-                    const response = await fetchWithAuth(`http://localhost:8000/api/v1/grupos/${id}/`);
+                    const response = await fetchWithAuth(`${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/grupos/${id}/`);
                     if (response.ok) {
                         const groupData = await response.json();
                         setName(groupData.nombre);
@@ -212,7 +212,7 @@ export function CreateGroup() {
     useEffect(() => {
         async function fetchResearchers() {
             try {
-                const response = await fetchWithAuth("http://localhost:8000/api/v1/investigadores/");
+                const response = await fetchWithAuth(`${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/investigadores/`);
                 if (!response.ok) {
                     throw new Error("Error al obtener los investigadores");
                 }
@@ -237,7 +237,7 @@ export function CreateGroup() {
     
         while (true) {
             try {
-                const response = await fetchWithAuth(`http://localhost:8000/api/v1/investigadores/?page=${page}`);
+                const response = await fetchWithAuth(`${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/investigadores/?page=${page}`);
                 if (!response.ok) {
                     throw new Error("Error al obtener los investigadores");
                 }
@@ -275,7 +275,7 @@ export function CreateGroup() {
         const refresh = localStorage.getItem('refresh_token');
         if (refresh) {
             try {
-                const response = await fetch('http://localhost:8000/api/v1/token/refresh/', {
+                const response = await fetch(`${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/token/refresh/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -309,7 +309,7 @@ export function CreateGroup() {
 
 
         try {
-            const response = await fetchWithAuth("http://localhost:8000/api/v1/grupos/", {
+            const response = await fetchWithAuth(`${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/grupos/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -338,7 +338,7 @@ export function CreateGroup() {
 
     const handleUpdateGroup = async () => {
         try {
-            const response = await fetchWithAuth(`http://localhost:8000/api/v1/grupos/${id}/`, {
+            const response = await fetchWithAuth(`${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/grupos/${id}/`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",

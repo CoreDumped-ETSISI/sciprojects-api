@@ -196,7 +196,7 @@ export function CreateProject() {
     const handleDeleteProject = async () => {
         if (confirmationName === projectName) {
             try {
-                const response = await fetchWithAuth(`http://localhost:8000/api/v1/proyectos/${id}/`, {
+                const response = await fetchWithAuth(`${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/proyectos/${id}/`, {
                     method: "DELETE",
                     headers: {
                         "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
@@ -236,7 +236,7 @@ export function CreateProject() {
         const refresh = localStorage.getItem('refresh_token');
         if (refresh) {
             try {
-                const response = await fetch('http://localhost:8000/api/v1/token/refresh/', {
+                const response = await fetch(`${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/token/refresh/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -304,7 +304,7 @@ export function CreateProject() {
         if (id) {
             const fetchProjectData = async () => {
                 try {
-                    const response = await fetchWithAuth(`http://localhost:8000/api/v1/proyectos/${id}/`);
+                    const response = await fetchWithAuth(`${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/proyectos/${id}/`);
                     if (response.ok) {
                         const data = await response.json();
                         setProjectName(data.nombre);
@@ -335,7 +335,7 @@ export function CreateProject() {
     
         while (true) {
             try {
-                const response = await fetchWithAuth(`http://localhost:8000/api/v1/investigadores/?page=${page}`);
+                const response = await fetchWithAuth(`${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/investigadores/?page=${page}`);
                 if (!response.ok) {
                     throw new Error("Error al obtener los investigadores");
                 }
@@ -370,7 +370,7 @@ export function CreateProject() {
 
     const handleUpdateProject = async () => {
         try {
-            const response = await fetchWithAuth(`http://localhost:8000/api/v1/proyectos/${id}/`, {
+            const response = await fetchWithAuth(`${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/proyectos/${id}/`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -418,7 +418,7 @@ export function CreateProject() {
         }
     
         try {
-            const response = await fetchWithAuth("http://localhost:8000/api/v1/proyectos/", {
+            const response = await fetchWithAuth(`${import.meta.env.VITE_REACT_APP_API_URL}/api/v1/proyectos/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

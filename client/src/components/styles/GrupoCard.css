@@ -48,11 +48,13 @@
 .investigador-enlace, .proyecto-enlace {
     text-decoration: none;
     color: #007bff;
+    font-size: 1.25rem;
 }
 
 .investigador-enlace:hover, .proyecto-enlace:hover {
     color: #0056b3;
 }
+
 .modify-button {
     padding: 8px 12px;
     background-color: #28a745; /* Color verde */
@@ -66,3 +68,6 @@
 .modify-button:hover {
     background-color: #218838; /* Color verde más oscuro al pasar el ratón */
 }
+
+
+

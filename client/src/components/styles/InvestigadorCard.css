@@ -49,8 +49,10 @@
 .grupo-enlace, .proyecto-enlace {
     text-decoration: none;
     color: #007bff;
+    font-size: 1.25rem;
 }
 
 .grupo-enlace:hover, .proyecto-enlace:hover {
     color: #0056b3;
 }
+
